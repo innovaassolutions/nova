@@ -3,6 +3,21 @@
 import { useState } from 'react';
 import { LinkedInContact } from '@/lib/csv-parser';
 
+// Format date helper function
+function formatDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    // Format as "Dec 7, 2025"
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  } catch {
+    return dateString;
+  }
+}
+
 interface Campaign {
   id: string;
   name: string;
@@ -23,12 +38,18 @@ interface ContactPreviewTableProps {
   onCancel: () => void;
 }
 
+type SortField = 'name' | 'company' | 'connectedOn';
+type SortDirection = 'asc' | 'desc';
+
 export default function ContactPreviewTable({
   contacts,
   campaigns,
   onImport,
   onCancel,
 }: ContactPreviewTableProps) {
+  const [sortField, setSortField] = useState<SortField>('connectedOn');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
   const [contactsWithSelection, setContactsWithSelection] = useState<ContactWithSelection[]>(
     contacts.map((contact, index) => ({
       ...contact,
@@ -38,8 +59,40 @@ export default function ContactPreviewTable({
     }))
   );
 
+  // Sort contacts based on current sort settings
+  const sortedContacts = [...contactsWithSelection].sort((a, b) => {
+    let compareValue = 0;
+
+    if (sortField === 'name') {
+      const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+      const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+      compareValue = nameA.localeCompare(nameB);
+    } else if (sortField === 'company') {
+      const companyA = (a.company || '').toLowerCase();
+      const companyB = (b.company || '').toLowerCase();
+      compareValue = companyA.localeCompare(companyB);
+    } else if (sortField === 'connectedOn') {
+      const dateA = a.connectedOn ? new Date(a.connectedOn).getTime() : 0;
+      const dateB = b.connectedOn ? new Date(b.connectedOn).getTime() : 0;
+      compareValue = dateA - dateB;
+    }
+
+    return sortDirection === 'asc' ? compareValue : -compareValue;
+  });
+
   const selectedCount = contactsWithSelection.filter((c) => c.selected).length;
   const totalCount = contactsWithSelection.length;
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, default to ascending (except connectedOn which defaults to desc)
+      setSortField(field);
+      setSortDirection(field === 'connectedOn' ? 'desc' : 'asc');
+    }
+  };
 
   const toggleAll = () => {
     const newSelectState = selectedCount < totalCount;
@@ -131,30 +184,63 @@ export default function ContactPreviewTable({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                   Select
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
+                <th
+                  className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center gap-1">
+                    Name
+                    {sortField === 'name' && (
+                      <span className="text-gray-400">
+                        {sortDirection === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Company
+                <th
+                  className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('company')}
+                >
+                  <div className="flex items-center gap-1">
+                    Company
+                    {sortField === 'company' && (
+                      <span className="text-gray-400">
+                        {sortDirection === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Position
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-28"
+                  onClick={() => handleSort('connectedOn')}
+                >
+                  <div className="flex items-center gap-1">
+                    Connected
+                    {sortField === 'connectedOn' && (
+                      <span className="text-gray-400">
+                        {sortDirection === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
                   Campaigns
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {contactsWithSelection.map((contact) => (
+              {sortedContacts.map((contact) => (
                 <tr
                   key={contact.index}
                   className={contact.selected ? 'bg-white' : 'bg-gray-50 opacity-60'}
                 >
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={contact.selected}
@@ -162,23 +248,26 @@ export default function ContactPreviewTable({
                       className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                     />
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {contact.firstName} {contact.lastName}
                     </div>
                     {contact.email && (
-                      <div className="text-sm text-gray-500">{contact.email}</div>
+                      <div className="text-xs text-gray-500">{contact.email}</div>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-2 py-2 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{contact.company || '-'}</div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-2">
                     <div className="text-sm text-gray-900 max-w-xs truncate" title={contact.position}>
                       {contact.position || '-'}
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-600">
+                    {contact.connectedOn ? formatDate(contact.connectedOn) : '-'}
+                  </td>
+                  <td className="px-2 py-2">
                     <CampaignMultiSelect
                       campaigns={campaigns}
                       selectedCampaignIds={contact.campaignIds}
