@@ -1,8 +1,10 @@
 /**
  * Contacts API Route
  *
+ * GET /api/contacts - Fetch contacts with search/filter/sort
  * POST /api/contacts - Create a new contact with LinkedIn capture
  * Story: 2.2 - Contact Creation Form
+ * Story: 2.3 - Contacts List with Search & Filter
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -18,6 +20,103 @@ interface ContactRequest {
   connected_on?: string;
   source?: string;
   campaign_ids: string[];
+}
+
+/**
+ * GET /api/contacts
+ * Fetch contacts with search, filter, and sort capabilities
+ */
+export async function GET(request: NextRequest) {
+  const supabase = await createClient();
+
+  // Check authentication
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search') || '';
+    const filter = searchParams.get('filter') || 'all';
+    const sort = searchParams.get('sort') || 'recent';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '50');
+
+    // Build query with campaign data join
+    let query = supabase
+      .from('contacts')
+      .select(`
+        *,
+        campaigns:campaign_contacts(
+          campaign:campaigns(id, name, status)
+        )
+      `);
+
+    // Apply search filter (case-insensitive search across multiple fields)
+    if (search) {
+      query = query.or(
+        `first_name.ilike.%${search}%,last_name.ilike.%${search}%,company.ilike.%${search}%,position.ilike.%${search}%`
+      );
+    }
+
+    // Apply filter
+    if (filter === 'my') {
+      query = query.eq('owner_id', user.id);
+    } else if (filter === 'unassigned') {
+      query = query.is('owner_id', null);
+    } else if (filter.startsWith('campaign-')) {
+      const campaignId = filter.replace('campaign-', '');
+      // For campaign filter, we need to join through campaign_contacts
+      query = query.eq('campaign_contacts.campaign_id', campaignId);
+    }
+
+    // Apply sort
+    if (sort === 'name-asc') {
+      query = query.order('last_name', { ascending: true }).order('first_name', { ascending: true });
+    } else if (sort === 'name-desc') {
+      query = query.order('last_name', { ascending: false }).order('first_name', { ascending: false });
+    } else if (sort === 'company') {
+      query = query.order('company', { ascending: true, nullsFirst: false });
+    } else {
+      // Default: recently added
+      query = query.order('created_at', { ascending: false });
+    }
+
+    // Apply pagination
+    const offset = (page - 1) * limit;
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: contacts, error: contactsError } = await query;
+
+    if (contactsError) {
+      console.error('Error fetching contacts:', contactsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch contacts' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      contacts: contacts || [],
+      pagination: {
+        page,
+        limit,
+        total: contacts?.length || 0,
+      }
+    });
+  } catch (error) {
+    console.error('Unexpected error in contacts GET API:', error);
+    return NextResponse.json(
+      { error: 'An unexpected error occurred' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {

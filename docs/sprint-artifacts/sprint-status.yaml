@@ -30,7 +30,7 @@ development_status:
   epic-2: in-progress
   2-1-contacts-database-table-indexes: duplicate # Work completed in Story 1.2
   2-2-manual-contact-creation-form-campaign-assignment: done
-  2-3-contacts-list-page-search-filtering: ready-for-dev
+  2-3-contacts-list-page-search-filtering: in-progress
   2-4-contact-detail-view-edit-modal: backlog
   2-5-duplicate-contact-prevention: backlog
   epic-2-retrospective: optional
