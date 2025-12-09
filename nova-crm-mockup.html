@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova CRM - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Catppuccin Mocha Base Colors */
+            --mocha-base: #1e1e2e;
+            --mocha-mantle: #181825;
+            --mocha-crust: #11111b;
+            --mocha-surface0: #313244;
+            --mocha-surface1: #45475a;
+            --mocha-surface2: #585b70;
+            --mocha-overlay0: #6c7086;
+            --mocha-overlay1: #7f849c;
+            --mocha-overlay2: #9399b2;
+            
+            /* Catppuccin Mocha Text Colors */
+            --mocha-text: #cdd6f4;
+            --mocha-subtext0: #a6adc8;
+            --mocha-subtext1: #bac2de;
+            
+            /* Innovaas Brand Orange */
+            --innovaas-orange: #F25C05;
+            --innovaas-orange-hover: #D94C04;
+            --innovaas-orange-soft: #ff7b3d;
+            
+            /* Catppuccin Mocha Accents */
+            --mocha-lavender: #b4befe;
+            --mocha-blue: #89b4fa;
+            --mocha-sapphire: #74c7ec;
+            --mocha-teal: #94e2d5;
+            --mocha-green: #a6e3a1;
+            --mocha-yellow: #f9e2af;
+            --mocha-peach: #fab387;
+            --mocha-maroon: #eba0ac;
+            --mocha-red: #f38ba8;
+            --mocha-mauve: #cba6f7;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--mocha-base);
+            color: var(--mocha-text);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--mocha-mantle);
+            border-right: 1px solid var(--mocha-surface0);
+            padding: 2rem 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            padding: 0 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid var(--mocha-surface0);
+            margin-bottom: 2rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--innovaas-orange), var(--innovaas-orange-soft));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 4px 12px rgba(242, 92, 5, 0.3);
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-text .nova {
+            color: var(--innovaas-orange);
+        }
+
+        .logo-text .crm {
+            color: var(--mocha-text);
+        }
+
+        .nav-section {
+            padding: 0 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .nav-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--mocha-overlay1);
+            padding: 0 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            color: var(--mocha-subtext0);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: var(--mocha-surface0);
+            color: var(--mocha-text);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(242, 92, 5, 0.15), rgba(242, 92, 5, 0.05));
+            color: var(--innovaas-orange);
+            border-left: 3px solid var(--innovaas-orange);
+            padding-left: calc(1rem - 3px);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            overflow-y: auto;
+            background: var(--mocha-base);
+        }
+
+        .header {
+            background: var(--mocha-mantle);
+            border-bottom: 1px solid var(--mocha-surface0);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            background: var(--mocha-surface0);
+            border: 1px solid var(--mocha-surface1);
+            border-radius: 10px;
+            color: var(--mocha-text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--innovaas-orange);
+            box-shadow: 0 0 0 3px rgba(242, 92, 5, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--mocha-overlay1);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .icon-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--mocha-surface0);
+            border: none;
+            color: var(--mocha-text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .icon-button:hover {
+            background: var(--mocha-surface1);
+            transform: translateY(-2px);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--mocha-lavender), var(--mocha-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--mocha-base);
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .page-subtitle {
+            color: var(--mocha-subtext0);
+            font-size: 1rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--mocha-mantle);
+            border: 1px solid var(--mocha-surface0);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--stat-color), transparent);
+        }
+
+        .stat-card.orange::before { --stat-color: var(--innovaas-orange); }
+        .stat-card.blue::before { --stat-color: var(--mocha-blue); }
+        .stat-card.teal::before { --stat-color: var(--mocha-teal); }
+        .stat-card.lavender::before { --stat-color: var(--mocha-lavender); }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--mocha-subtext0);
+            font-weight: 600;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-icon.orange { background: rgba(242, 92, 5, 0.15); color: var(--innovaas-orange); }
+        .stat-icon.blue { background: rgba(137, 180, 250, 0.15); color: var(--mocha-blue); }
+        .stat-icon.teal { background: rgba(148, 226, 213, 0.15); color: var(--mocha-teal); }
+        .stat-icon.lavender { background: rgba(180, 190, 254, 0.15); color: var(--mocha-lavender); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+        }
+
+        .stat-change.positive {
+            background: rgba(166, 227, 161, 0.15);
+            color: var(--mocha-green);
+        }
+
+        .stat-change.negative {
+            background: rgba(243, 139, 168, 0.15);
+            color: var(--mocha-red);
+        }
+
+        /* Activity Section */
+        .activity-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--mocha-mantle);
+            border: 1px solid var(--mocha-surface0);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--innovaas-orange);
+            color: white;
+            box-shadow: 0 2px 8px rgba(242, 92, 5, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--innovaas-orange-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(242, 92, 5, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--mocha-surface0);
+            color: var(--mocha-text);
+            border: 1px solid var(--mocha-surface1);
+        }
+
+        .btn-secondary:hover {
+            background: var(--mocha-surface1);
+        }
+
+        /* Deals Table */
+        .deals-table {
+            width: 100%;
+        }
+
+        .deals-table thead {
+            border-bottom: 1px solid var(--mocha-surface0);
+        }
+
+        .deals-table th {
+            text-align: left;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--mocha-overlay1);
+        }
+
+        .deals-table td {
+            padding: 1rem 0.5rem;
+            border-bottom: 1px solid var(--mocha-surface0);
+        }
+
+        .deals-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .company-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .company-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .company-name {
+            font-weight: 600;
+        }
+
+        .deal-value {
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.active {
+            background: rgba(166, 227, 161, 0.15);
+            color: var(--mocha-green);
+        }
+
+        .status-badge.pending {
+            background: rgba(249, 226, 175, 0.15);
+            color: var(--mocha-yellow);
+        }
+
+        .status-badge.negotiation {
+            background: rgba(137, 180, 250, 0.15);
+            color: var(--mocha-blue);
+        }
+
+        /* Recent Activity */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--mocha-surface0);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-meta {
+            font-size: 0.875rem;
+            color: var(--mocha-subtext0);
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--mocha-overlay1);
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">N</div>
+                <div class="logo-text">
+                    <span class="nova">Nova</span><span class="crm">CRM</span>
+                </div>
+            </div>
+
+            <nav class="nav-section">
+                <div class="nav-label">Main</div>
+                <a href="#" class="nav-item active">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Contacts
+                </a>
+                <a href="#" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    Companies
+                </a>
+                <a href="#" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Deals
+                </a>
+            </nav>
+
+            <nav class="nav-section">
+                <div class="nav-label">Management</div>
+                <a href="#" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Tasks
+                </a>
+                <a href="#" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Analytics
+                </a>
+                <a href="#" class="nav-item">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="search-bar">
+                    <svg class="search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" placeholder="Search contacts, companies, deals...">
+                </div>
+                <div class="header-actions">
+                    <button class="icon-button">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </button>
+                    <div class="user-avatar">TS</div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <h1 class="page-title">Welcome back, Todd</h1>
+                    <p class="page-subtitle">Here's what's happening with your sales pipeline today</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card orange">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Total Revenue</div>
+                            </div>
+                            <div class="stat-icon orange">💰</div>
+                        </div>
+                        <div class="stat-value">$847,290</div>
+                        <span class="stat-change positive">↑ 12.5%</span>
+                    </div>
+
+                    <div class="stat-card blue">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Active Deals</div>
+                            </div>
+                            <div class="stat-icon blue">📊</div>
+                        </div>
+                        <div class="stat-value">42</div>
+                        <span class="stat-change positive">↑ 8 this week</span>
+                    </div>
+
+                    <div class="stat-card teal">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Conversion Rate</div>
+                            </div>
+                            <div class="stat-icon teal">📈</div>
+                        </div>
+                        <div class="stat-value">68.4%</div>
+                        <span class="stat-change positive">↑ 4.2%</span>
+                    </div>
+
+                    <div class="stat-card lavender">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">New Contacts</div>
+                            </div>
+                            <div class="stat-icon lavender">👥</div>
+                        </div>
+                        <div class="stat-value">127</div>
+                        <span class="stat-change negative">↓ 3% this month</span>
+                    </div>
+                </div>
+
+                <!-- Activity Section -->
+                <div class="activity-section">
+                    <!-- Recent Deals -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Recent Deals</h2>
+                            <button class="btn btn-primary">+ New Deal</button>
+                        </div>
+                        <table class="deals-table">
+                            <thead>
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Value</th>
+                                    <th>Status</th>
+                                    <th>Close Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="company-cell">
+                                            <div class="company-avatar" style="background: rgba(137, 180, 250, 0.2); color: var(--mocha-blue);">AL</div>
+                                            <span class="company-name">Alimex Manufacturing</span>
+                                        </div>
+                                    </td>
+                                    <td class="deal-value">$125,000</td>
+                                    <td><span class="status-badge negotiation">Negotiation</span></td>
+                                    <td>Dec 15, 2025</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="company-cell">
+                                            <div class="company-avatar" style="background: rgba(148, 226, 213, 0.2); color: var(--mocha-teal);">RG</div>
+                                            <span class="company-name">RGE Solutions</span>
+                                        </div>
+                                    </td>
+                                    <td class="deal-value">$89,500</td>
+                                    <td><span class="status-badge active">Active</span></td>
+                                    <td>Dec 20, 2025</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="company-cell">
+                                            <div class="company-avatar" style="background: rgba(180, 190, 254, 0.2); color: var(--mocha-lavender);">TC</div>
+                                            <span class="company-name">TechCorp Industries</span>
+                                        </div>
+                                    </td>
+                                    <td class="deal-value">$67,200</td>
+                                    <td><span class="status-badge pending">Pending</span></td>
+                                    <td>Jan 10, 2026</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="company-cell">
+                                            <div class="company-avatar" style="background: rgba(242, 92, 5, 0.2); color: var(--innovaas-orange);">SM</div>
+                                            <span class="company-name">Smart Manufacturing</span>
+                                        </div>
+                                    </td>
+                                    <td class="deal-value">$143,800</td>
+                                    <td><span class="status-badge active">Active</span></td>
+                                    <td>Dec 28, 2025</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Recent Activity</h2>
+                            <button class="btn btn-secondary">View All</button>
+                        </div>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <div class="activity-icon" style="background: rgba(166, 227, 161, 0.15); color: var(--mocha-green);">✓</div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Deal closed</div>
+                                    <div class="activity-meta">Alimex Manufacturing - $125K</div>
+                                    <div class="activity-time">2 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon" style="background: rgba(137, 180, 250, 0.15); color: var(--mocha-blue);">📧</div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Email sent</div>
+                                    <div class="activity-meta">Follow-up with Malcolm</div>
+                                    <div class="activity-time">5 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon" style="background: rgba(180, 190, 254, 0.15); color: var(--mocha-lavender);">👤</div>
+                                <div class="activity-content">
+                                    <div class="activity-title">New contact added</div>
+                                    <div class="activity-meta">Sarah Chen - RGE Solutions</div>
+                                    <div class="activity-time">1 day ago</div>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon" style="background: rgba(242, 92, 5, 0.15); color: var(--innovaas-orange);">📅</div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Meeting scheduled</div>
+                                    <div class="activity-meta">Q1 Planning with TechCorp</div>
+                                    <div class="activity-time">2 days ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
