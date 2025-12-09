@@ -3,26 +3,18 @@ import { createClient } from '@/lib/supabase/server';
 import { LinkedInContact } from '@/lib/csv-parser';
 
 interface ImportRequest {
-  contacts: LinkedInContact[];
-  campaignIds: string[];
+  selectedContacts: Array<{ contact: LinkedInContact; campaignIds: string[] }>;
   overwriteIds: string[];
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: ImportRequest = await request.json();
-    const { contacts, campaignIds, overwriteIds } = body;
+    const { selectedContacts, overwriteIds } = body;
 
-    if (!contacts || contacts.length === 0) {
+    if (!selectedContacts || selectedContacts.length === 0) {
       return NextResponse.json(
         { error: 'No contacts provided' },
-        { status: 400 }
-      );
-    }
-
-    if (!campaignIds || campaignIds.length === 0) {
-      return NextResponse.json(
-        { error: 'No campaigns selected' },
         { status: 400 }
       );
     }
@@ -35,7 +27,7 @@ export async function POST(request: NextRequest) {
     // LinkedIn URL validation regex
     const linkedInUrlPattern = /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
 
-    for (const contact of contacts) {
+    for (const { contact, campaignIds } of selectedContacts) {
       try {
         // Validate LinkedIn URL
         if (!linkedInUrlPattern.test(contact.url)) {

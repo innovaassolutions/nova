@@ -12,8 +12,7 @@ export default function UploadContactsPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
   const [pendingUpload, setPendingUpload] = useState<{
-    contacts: LinkedInContact[];
-    campaignIds: string[];
+    selectedContacts: Array<{ contact: LinkedInContact; campaignIds: string[] }>;
   } | null>(null);
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
@@ -41,33 +40,15 @@ export default function UploadContactsPage() {
     setCampaigns(data || []);
   };
 
-  const handleFileSelect = async (file: File, selectedCampaignIds: string[]) => {
+  const handleImport = async (selectedContacts: Array<{ contact: LinkedInContact; campaignIds: string[] }>) => {
     setIsProcessing(true);
     setMessage(null);
 
     try {
-      // Step 1: Parse CSV
-      const { contacts, errors } = await parseLinkedInCsv(file);
+      // Extract just the contacts for duplicate checking
+      const contacts = selectedContacts.map(sc => sc.contact);
 
-      if (errors.length > 0) {
-        setMessage({
-          type: 'error',
-          text: `CSV parsing errors:\\n${errors.join('\\n')}`,
-        });
-        setIsProcessing(false);
-        return;
-      }
-
-      if (contacts.length === 0) {
-        setMessage({
-          type: 'error',
-          text: 'No valid contacts found in CSV file',
-        });
-        setIsProcessing(false);
-        return;
-      }
-
-      // Step 2: Fetch existing contacts for duplicate detection
+      // Fetch existing contacts for duplicate detection
       const { data: existingContacts, error: fetchError } = await supabase
         .from('contacts')
         .select('id, first_name, last_name, linkedin_url, email, company, position');
@@ -76,23 +57,23 @@ export default function UploadContactsPage() {
         throw new Error(`Failed to fetch existing contacts: ${fetchError.message}`);
       }
 
-      // Step 3: Check for duplicates
+      // Check for duplicates
       const duplicateMatches = findDuplicates(contacts, existingContacts || []);
 
       if (duplicateMatches.length > 0) {
         // Show duplicate modal
         setDuplicates(duplicateMatches);
-        setPendingUpload({ contacts, campaignIds: selectedCampaignIds });
+        setPendingUpload({ selectedContacts });
         setIsProcessing(false);
       } else {
         // No duplicates, proceed with import
-        await performImport(contacts, selectedCampaignIds, []);
+        await performImport(selectedContacts, []);
       }
     } catch (error) {
-      console.error('Error processing file:', error);
+      console.error('Error processing import:', error);
       setMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'An error occurred processing the file',
+        text: error instanceof Error ? error.message : 'An error occurred during import',
       });
       setIsProcessing(false);
     }
@@ -104,11 +85,7 @@ export default function UploadContactsPage() {
     setDuplicates([]);
     setIsProcessing(true);
 
-    await performImport(
-      pendingUpload.contacts,
-      pendingUpload.campaignIds,
-      overwriteIds
-    );
+    await performImport(pendingUpload.selectedContacts, overwriteIds);
 
     setPendingUpload(null);
   };
@@ -124,8 +101,7 @@ export default function UploadContactsPage() {
   };
 
   const performImport = async (
-    contacts: LinkedInContact[],
-    campaignIds: string[],
+    selectedContacts: Array<{ contact: LinkedInContact; campaignIds: string[] }>,
     overwriteIds: string[]
   ) => {
     try {
@@ -135,8 +111,7 @@ export default function UploadContactsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contacts,
-          campaignIds,
+          selectedContacts,
           overwriteIds,
         }),
       });
@@ -203,7 +178,7 @@ export default function UploadContactsPage() {
 
           <CsvUploadForm
             campaigns={campaigns}
-            onFileSelect={handleFileSelect}
+            onImport={handleImport}
             isProcessing={isProcessing}
           />
 
