@@ -1,23 +1,23 @@
-<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Nova Icon - Exploding Star Concept -->
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Nova Icon - Exploding Star Concept (Scaled to 128x128) -->
   <!-- Center core -->
-  <circle cx="30" cy="30" r="6" fill="#F25C05"/>
-  
+  <circle cx="64" cy="64" r="13" fill="#F25C05"/>
+
   <!-- Primary rays -->
-  <path d="M30 10 L30 18" stroke="#F25C05" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M30 42 L30 50" stroke="#F25C05" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M10 30 L18 30" stroke="#F25C05" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M42 30 L50 30" stroke="#F25C05" stroke-width="2.5" stroke-linecap="round"/>
-  
+  <path d="M64 21 L64 38" stroke="#F25C05" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M64 90 L64 107" stroke="#F25C05" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M21 64 L38 64" stroke="#F25C05" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M90 64 L107 64" stroke="#F25C05" stroke-width="5.5" stroke-linecap="round"/>
+
   <!-- Diagonal rays -->
-  <path d="M16 16 L21.5 21.5" stroke="#ff7b3d" stroke-width="2" stroke-linecap="round"/>
-  <path d="M38.5 38.5 L44 44" stroke="#ff7b3d" stroke-width="2" stroke-linecap="round"/>
-  <path d="M44 16 L38.5 21.5" stroke="#ff7b3d" stroke-width="2" stroke-linecap="round"/>
-  <path d="M21.5 38.5 L16 44" stroke="#ff7b3d" stroke-width="2" stroke-linecap="round"/>
-  
+  <path d="M34 34 L46 46" stroke="#ff7b3d" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M82 82 L94 94" stroke="#ff7b3d" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M94 34 L82 46" stroke="#ff7b3d" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M46 82 L34 94" stroke="#ff7b3d" stroke-width="4.5" stroke-linecap="round"/>
+
   <!-- Accent particles -->
-  <circle cx="14" cy="24" r="1.5" fill="#89b4fa" opacity="0.8"/>
-  <circle cx="46" cy="36" r="1.5" fill="#89b4fa" opacity="0.8"/>
-  <circle cx="24" cy="14" r="1.5" fill="#74c7ec" opacity="0.6"/>
-  <circle cx="36" cy="46" r="1.5" fill="#74c7ec" opacity="0.6"/>
+  <circle cx="30" cy="51" r="3.2" fill="#89b4fa" opacity="0.8"/>
+  <circle cx="98" cy="77" r="3.2" fill="#89b4fa" opacity="0.8"/>
+  <circle cx="51" cy="30" r="3.2" fill="#74c7ec" opacity="0.6"/>
+  <circle cx="77" cy="98" r="3.2" fill="#74c7ec" opacity="0.6"/>
 </svg>
