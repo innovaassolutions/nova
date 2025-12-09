@@ -29,7 +29,7 @@ development_status:
   # Epic 2: Contact Management & LinkedIn Capture (5 stories)
   epic-2: in-progress
   2-1-contacts-database-table-indexes: duplicate # Work completed in Story 1.2
-  2-2-manual-contact-creation-form-campaign-assignment: ready-for-dev
+  2-2-manual-contact-creation-form-campaign-assignment: in-progress
   2-3-contacts-list-page-search-filtering: ready-for-dev
   2-4-contact-detail-view-edit-modal: backlog
   2-5-duplicate-contact-prevention: backlog
