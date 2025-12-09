@@ -11,6 +11,7 @@ import {
   ChartBarIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
+import LogoutButton from './LogoutButton';
 
 interface NavItem {
   label: string;
@@ -36,7 +37,7 @@ export default function Sidebar() {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[#181825] border-r border-[#313244] px-6 py-8 z-90">
+    <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[#181825] border-r border-[#313244] px-6 py-8 z-90 flex flex-col">
       {/* Logo Section */}
       <div className="mb-6 pb-6 border-b border-[#313244]">
         <div className="flex justify-center">
@@ -119,6 +120,11 @@ export default function Sidebar() {
           </ul>
         </div>
       </nav>
+
+      {/* Logout Button - Pushed to Bottom */}
+      <div className="mt-auto">
+        <LogoutButton />
+      </div>
     </aside>
   );
 }
