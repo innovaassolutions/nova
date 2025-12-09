@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
     let imported = 0;
     let overwritten = 0;
 
-    // LinkedIn URL validation regex
-    const linkedInUrlPattern = /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
+    // LinkedIn URL validation regex (allow international characters, percent-encoding, etc.)
+    const linkedInUrlPattern = /^https:\/\/www\.linkedin\.com\/in\/[^\s\/]+\/?$/;
 
     for (const { contact, campaignIds } of selectedContacts) {
       try {

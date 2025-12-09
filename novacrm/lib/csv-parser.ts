@@ -67,8 +67,8 @@ export async function parseLinkedInCsv(file: File): Promise<ParseResult> {
             continue;
           }
 
-          // Validate LinkedIn URL format
-          const linkedInUrlPattern = /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
+          // Validate LinkedIn URL format (allow international characters, percent-encoding, etc.)
+          const linkedInUrlPattern = /^https:\/\/www\.linkedin\.com\/in\/[^\s\/]+\/?$/;
           if (!linkedInUrlPattern.test(row.url)) {
             errors.push(`Row ${i + 1}: Invalid LinkedIn URL format: ${row.url}`);
             continue;
