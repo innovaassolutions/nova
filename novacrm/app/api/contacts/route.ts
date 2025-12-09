@@ -21,7 +21,7 @@ interface ContactRequest {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Check authentication
   const { data: { user }, error: authError } = await supabase.auth.getUser();
