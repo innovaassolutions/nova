@@ -1,6 +1,6 @@
 # Story 1.5: Protected Routes & Logout Functionality
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -149,52 +149,52 @@ async function handleLogout() {
 
 ## Tasks / Subtasks
 
-- [ ] 1. Review existing middleware implementation (AC: 1)
-  - [ ] 1.1 Open novacrm/middleware.ts and verify all protection logic
-  - [ ] 1.2 Confirm matcher config excludes static assets
-  - [ ] 1.3 Verify Supabase SSR cookie management is correct
-  - [ ] 1.4 Test middleware redirects by visiting /dashboard while logged out
+- [x] 1. Review existing middleware implementation (AC: 1)
+  - [x] 1.1 Open novacrm/middleware.ts and verify all protection logic
+  - [x] 1.2 Confirm matcher config excludes static assets
+  - [x] 1.3 Verify Supabase SSR cookie management is correct
+  - [x] 1.4 Test middleware redirects by visiting /dashboard while logged out
 
-- [ ] 2. Create LogoutButton component (AC: 2)
-  - [ ] 2.1 Create file: `app/(dashboard)/components/LogoutButton.tsx`
-  - [ ] 2.2 Mark as 'use client' for useRouter and auth hooks
-  - [ ] 2.3 Import ArrowRightOnRectangleIcon from Heroicons
-  - [ ] 2.4 Implement handleLogout async function with supabase.auth.signOut()
-  - [ ] 2.5 Add loading state (useState) during logout operation
-  - [ ] 2.6 Style button with Catppuccin Mocha colors per UX spec
-  - [ ] 2.7 Add hover and transition effects
-  - [ ] 2.8 Implement router.push('/login') and router.refresh() after signOut
+- [x] 2. Create LogoutButton component (AC: 2)
+  - [x] 2.1 Create file: `app/(dashboard)/components/LogoutButton.tsx`
+  - [x] 2.2 Mark as 'use client' for useRouter and auth hooks
+  - [x] 2.3 Import ArrowRightOnRectangleIcon from Heroicons
+  - [x] 2.4 Implement handleLogout async function with supabase.auth.signOut()
+  - [x] 2.5 Add loading state (useState) during logout operation
+  - [x] 2.6 Style button with Catppuccin Mocha colors per UX spec
+  - [x] 2.7 Add hover and transition effects
+  - [x] 2.8 Implement router.push('/login') and router.refresh() after signOut
 
-- [ ] 3. Integrate LogoutButton in Sidebar (AC: 3)
-  - [ ] 3.1 Open app/(dashboard)/components/Sidebar.tsx
-  - [ ] 3.2 Import LogoutButton component
-  - [ ] 3.3 Add logout button at bottom of sidebar (after nav sections)
-  - [ ] 3.4 Use margin-top: auto to push to bottom of sidebar
-  - [ ] 3.5 Apply consistent padding with other sidebar elements
-  - [ ] 3.6 Verify button width matches sidebar width constraints
+- [x] 3. Integrate LogoutButton in Sidebar (AC: 3)
+  - [x] 3.1 Open app/(dashboard)/components/Sidebar.tsx
+  - [x] 3.2 Import LogoutButton component
+  - [x] 3.3 Add logout button at bottom of sidebar (after nav sections)
+  - [x] 3.4 Use margin-top: auto to push to bottom of sidebar
+  - [x] 3.5 Apply consistent padding with other sidebar elements
+  - [x] 3.6 Verify button width matches sidebar width constraints
 
-- [ ] 4. Test complete authentication flows (AC: 4, 5)
-  - [ ] 4.1 Test Scenario 1: Unauthenticated access redirect
-  - [ ] 4.2 Test Scenario 2: Authenticated navigation away from login
-  - [ ] 4.3 Test Scenario 3: Full logout flow with session clearance
-  - [ ] 4.4 Test Scenario 4: Session persistence across browser tabs
-  - [ ] 4.5 Test Scenario 5: Automatic token refresh (simulate long session)
-  - [ ] 4.6 Verify httpOnly cookies in browser DevTools (Application > Cookies)
-  - [ ] 4.7 Test callbackUrl parameter works correctly
-  - [ ] 4.8 Verify no console errors during auth flows
+- [x] 4. Test complete authentication flows (AC: 4, 5)
+  - [x] 4.1 Test Scenario 1: Unauthenticated access redirect
+  - [x] 4.2 Test Scenario 2: Authenticated navigation away from login
+  - [x] 4.3 Test Scenario 3: Full logout flow with session clearance
+  - [x] 4.4 Test Scenario 4: Session persistence across browser tabs
+  - [x] 4.5 Test Scenario 5: Automatic token refresh (simulate long session)
+  - [x] 4.6 Verify httpOnly cookies in browser DevTools (Application > Cookies)
+  - [x] 4.7 Test callbackUrl parameter works correctly
+  - [x] 4.8 Verify no console errors during auth flows
 
-- [ ] 5. Verify all acceptance criteria (AC: ALL)
-  - [ ] 5.1 AC1: Middleware protection verified
-  - [ ] 5.2 AC2: Logout button component created and styled
-  - [ ] 5.3 AC3: Logout button integrated in sidebar
-  - [ ] 5.4 AC4: All authentication scenarios tested successfully
-  - [ ] 5.5 AC5: Session security measures confirmed
+- [x] 5. Verify all acceptance criteria (AC: ALL)
+  - [x] 5.1 AC1: Middleware protection verified
+  - [x] 5.2 AC2: Logout button component created and styled
+  - [x] 5.3 AC3: Logout button integrated in sidebar
+  - [x] 5.4 AC4: All authentication scenarios tested successfully
+  - [x] 5.5 AC5: Session security measures confirmed
 
-- [ ] 6. Commit and deploy (AC: ALL)
-  - [ ] 6.1 Stage modified files (Sidebar.tsx, new LogoutButton.tsx)
-  - [ ] 6.2 Create commit: "Complete Story 1.5: Protected Routes & Logout Functionality"
-  - [ ] 6.3 Push to GitHub for Vercel deployment
-  - [ ] 6.4 Test deployed version on Vercel preview URL
+- [x] 6. Commit and deploy (AC: ALL)
+  - [x] 6.1 Stage modified files (Sidebar.tsx, new LogoutButton.tsx)
+  - [x] 6.2 Create commit: "Complete Story 1.5: Protected Routes & Logout Functionality"
+  - [x] 6.3 Push to GitHub for Vercel deployment
+  - [x] 6.4 Test deployed version on Vercel preview URL
 
 ## Dev Notes
 
@@ -598,12 +598,41 @@ export default function LogoutButton() {
 
 ### File List
 
-<!-- Will be populated during dev-story execution -->
+**Files Created:**
+- `novacrm/app/(dashboard)/components/LogoutButton.tsx` - New logout button component with loading state and Catppuccin Mocha styling
+- `docs/sprint-artifacts/1-5-protected-routes-session-management.md` - Story file
 
-**Expected Files to Modify/Create:**
-- NEW: `app/(dashboard)/components/LogoutButton.tsx`
-- MODIFY: `app/(dashboard)/components/Sidebar.tsx`
+**Files Modified:**
+- `novacrm/app/(dashboard)/components/Sidebar.tsx` - Added LogoutButton import and integrated at bottom with mt-auto flexbox pattern
+- `docs/sprint-artifacts/sprint-status.yaml` - Updated story status: ready-for-dev → in-progress → review
+
+### Implementation Notes
+
+**Implementation Summary:**
+- Created LogoutButton component following exact UX specifications from UX-Design.md§4.2
+- Implemented full loading state with orange spinner animation during logout
+- Integrated logout button at sidebar bottom using flexbox (mt-auto) for proper positioning
+- Verified middleware protection (already complete from Story 1.3)
+- All authentication flows tested successfully on deployed version
+
+**Technical Approach:**
+- Used 'use client' directive for client-side auth operations
+- Implemented `supabase.auth.signOut()` with `router.refresh()` for complete session cleanup
+- Applied exact Catppuccin Mocha colors: #313244 (Surface0), #45475a (Surface1), #a6adc8 (Subtext0)
+- ArrowRightOnRectangleIcon from Heroicons at 20×20px size
+- Hover state with subtle transform and color transitions
+
+**Testing Completed:**
+- ✅ Middleware protection verified (redirects work correctly)
+- ✅ Logout button appears at bottom of sidebar
+- ✅ Loading state displays during logout operation
+- ✅ Session clears and redirects to /login
+- ✅ Protected routes inaccessible after logout
+- ✅ Session persistence works correctly
+- ✅ Deployed version tested successfully on Vercel
 
 ## Change Log
 
 - 2025-12-09 (Initial): Story created by BMad Master Ultimate Context Engine. Comprehensive analysis of Epic 1 Story 1.6, Architecture.md authentication patterns, Story 1.3 middleware implementation (discovered already complete), Story 1.4 sidebar layout (ready for integration), and complete security specifications. Primary focus identified as logout functionality implementation rather than middleware creation. Marked as drafted with complete developer implementation guide including exact code patterns, testing procedures, and common pitfalls to avoid.
+
+- 2025-12-09 (Implementation Complete): Story 1.5 fully implemented and tested. Created LogoutButton component with loading state, integrated at sidebar bottom using flexbox layout. All authentication flows verified on deployed version. Middleware protection confirmed working. All acceptance criteria satisfied. Committed as dbca0a7 and deployed to Vercel. Status: in-progress → review.
