@@ -1,6 +1,6 @@
 # Story 1.4: Application Layout with Sidebar & Header
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
