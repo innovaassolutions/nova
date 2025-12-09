@@ -11,6 +11,14 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: 'Nova CRM',
   description: 'LinkedIn-first CRM for INNOVAAS sales team',
+  icons: {
+    icon: [
+      {
+        url: '/nova-crm-icon.svg',
+        type: 'image/svg+xml',
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
