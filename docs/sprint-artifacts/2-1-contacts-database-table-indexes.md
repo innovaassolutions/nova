@@ -1,6 +1,6 @@
 # Story 2.1: Contacts Database Table & Indexes
 
-Status: drafted
+Status: duplicate
 
 ## Story
 
