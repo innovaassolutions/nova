@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "create-test-users": "ts-node scripts/create-test-users.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
@@ -22,12 +23,14 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.0",
+    "dotenv": "^17.2.3",
     "eslint": "^8.0.0",
     "eslint-config-next": "^15.0.0",
     "eslint-config-prettier": "^10.1.8",
     "postcss": "^8.4.0",
     "prettier": "^3.7.4",
     "tailwindcss": "^3.4.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.0"
   }
 }

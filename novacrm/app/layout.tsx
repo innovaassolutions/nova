@@ -1,6 +1,7 @@
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import type { Metadata } from 'next';
 import './globals.css';
+import { ToastContainer } from '@/app/components/ui/Toast';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${plusJakartaSans.variable} font-sans bg-mocha-base text-mocha-text antialiased`}>
         {children}
+        <ToastContainer />
       </body>
     </html>
   );
