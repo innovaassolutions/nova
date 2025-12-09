@@ -10,6 +10,7 @@
     "create-test-users": "ts-node scripts/create-test-users.ts"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.39.0",
     "next": "^15.0.0",
