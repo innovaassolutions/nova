@@ -27,8 +27,8 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Contact Management & LinkedIn Capture (5 stories)
-  epic-2: backlog
-  2-1-contacts-database-table-indexes: backlog
+  epic-2: in-progress
+  2-1-contacts-database-table-indexes: ready-for-dev
   2-2-manual-contact-creation-form-campaign-assignment: backlog
   2-3-contacts-list-page-search-filtering: backlog
   2-4-contact-detail-view-edit-modal: backlog
