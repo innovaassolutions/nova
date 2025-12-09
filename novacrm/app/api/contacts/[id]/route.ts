@@ -107,8 +107,18 @@ export async function PUT(
     const { id } = await params;
     const body: UpdateContactRequest = await request.json();
 
-    // Extract campaign_ids separately
-    const { campaign_ids, ...contactData } = body;
+    // Extract campaign_ids and prepare update data
+    const { campaign_ids, ...rawData } = body;
+
+    // Only include updatable fields (exclude id, created_at, updated_at, campaigns)
+    const contactData: Partial<UpdateContactRequest> = {};
+    const allowedFields = ['first_name', 'last_name', 'linkedin_url', 'email', 'company', 'position', 'connected_on', 'source', 'notes', 'owner_id'];
+
+    for (const field of allowedFields) {
+      if (field in rawData) {
+        (contactData as any)[field] = (rawData as any)[field];
+      }
+    }
 
     // Validate LinkedIn URL format if provided
     if (contactData.linkedin_url) {
