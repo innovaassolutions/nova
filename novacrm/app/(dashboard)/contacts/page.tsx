@@ -11,6 +11,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PlusIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import ContactFormModal from './components/ContactFormModal';
+import ContactDetailModal from './components/ContactDetailModal';
 import FilterBar from './components/FilterBar';
 import ContactsTable from './components/ContactsTable';
 import ContactCard from './components/ContactCard';
@@ -45,6 +46,8 @@ interface Campaign {
 
 export default function ContactsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,6 +132,24 @@ export default function ContactsPage() {
     setSort(newSort);
   };
 
+  const handleViewContact = (contactId: string) => {
+    setSelectedContactId(contactId);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedContactId(null);
+  };
+
+  const handleContactUpdated = () => {
+    fetchContacts();
+  };
+
+  const handleContactDeleted = () => {
+    fetchContacts();
+  };
+
   return (
     <div className="max-w-[1200px]">
       {/* Page Header */}
@@ -177,7 +198,11 @@ export default function ContactsPage() {
 
       {/* Desktop Table View */}
       <div className="hidden md:block">
-        <ContactsTable contacts={contacts} loading={loading} />
+        <ContactsTable
+          contacts={contacts}
+          loading={loading}
+          onViewContact={handleViewContact}
+        />
       </div>
 
       {/* Mobile Card View */}
@@ -201,7 +226,11 @@ export default function ContactsPage() {
         ) : (
           <div className="space-y-4">
             {contacts.map((contact) => (
-              <ContactCard key={contact.id} contact={contact} />
+              <ContactCard
+                key={contact.id}
+                contact={contact}
+                onViewContact={handleViewContact}
+              />
             ))}
           </div>
         )}
@@ -213,6 +242,17 @@ export default function ContactsPage() {
         onClose={handleCloseModal}
         onSuccess={handleContactCreated}
       />
+
+      {/* Contact Detail Modal */}
+      {selectedContactId && (
+        <ContactDetailModal
+          contactId={selectedContactId}
+          isOpen={isDetailModalOpen}
+          onClose={handleCloseDetailModal}
+          onContactUpdated={handleContactUpdated}
+          onContactDeleted={handleContactDeleted}
+        />
+      )}
     </div>
   );
 }

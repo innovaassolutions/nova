@@ -35,9 +35,10 @@ interface Contact {
 
 interface ContactCardProps {
   contact: Contact;
+  onViewContact: (contactId: string) => void;
 }
 
-export default function ContactCard({ contact }: ContactCardProps) {
+export default function ContactCard({ contact, onViewContact }: ContactCardProps) {
   // Format date for display
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '—';
@@ -60,7 +61,7 @@ export default function ContactCard({ contact }: ContactCardProps) {
         />
         <div className="flex-1">
           <button
-            onClick={() => console.log('View contact:', contact.id)}
+            onClick={() => onViewContact(contact.id)}
             className="font-bold text-[#cdd6f4] transition-colors duration-200 hover:text-[#F25C05]"
           >
             {contact.first_name} {contact.last_name}
@@ -106,7 +107,7 @@ export default function ContactCard({ contact }: ContactCardProps) {
       {/* Footer with Actions */}
       <div className="flex justify-end gap-2 border-t border-[#313244] pt-4">
         <button
-          onClick={() => console.log('View contact:', contact.id)}
+          onClick={() => onViewContact(contact.id)}
           className="flex items-center gap-2 rounded-lg bg-[#313244] px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-colors duration-200 hover:bg-[#45475a] hover:text-[#F25C05]"
           aria-label="View contact"
         >
@@ -114,7 +115,7 @@ export default function ContactCard({ contact }: ContactCardProps) {
           View
         </button>
         <button
-          onClick={() => console.log('Edit contact:', contact.id)}
+          onClick={() => onViewContact(contact.id)}
           className="flex items-center gap-2 rounded-lg bg-[#313244] px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-colors duration-200 hover:bg-[#45475a] hover:text-[#F25C05]"
           aria-label="Edit contact"
         >

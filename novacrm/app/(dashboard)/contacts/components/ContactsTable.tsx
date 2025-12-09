@@ -36,9 +36,10 @@ interface Contact {
 interface ContactsTableProps {
   contacts: Contact[];
   loading?: boolean;
+  onViewContact: (contactId: string) => void;
 }
 
-export default function ContactsTable({ contacts, loading = false }: ContactsTableProps) {
+export default function ContactsTable({ contacts, loading = false, onViewContact }: ContactsTableProps) {
   // Format date for display
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '—';
@@ -114,7 +115,7 @@ export default function ContactsTable({ contacts, loading = false }: ContactsTab
                   />
                   <div>
                     <button
-                      onClick={() => console.log('View contact:', contact.id)}
+                      onClick={() => onViewContact(contact.id)}
                       className="font-bold text-[#cdd6f4] transition-colors duration-200 hover:text-[#F25C05]"
                     >
                       {contact.first_name} {contact.last_name}
@@ -156,14 +157,14 @@ export default function ContactsTable({ contacts, loading = false }: ContactsTab
               <td className="px-2 py-4">
                 <div className="flex justify-end gap-2">
                   <button
-                    onClick={() => console.log('View contact:', contact.id)}
+                    onClick={() => onViewContact(contact.id)}
                     className="rounded-lg p-2 text-[#a6adc8] transition-colors duration-200 hover:bg-[#313244] hover:text-[#F25C05]"
                     aria-label="View contact"
                   >
                     <EyeIcon className="h-5 w-5" />
                   </button>
                   <button
-                    onClick={() => console.log('Edit contact:', contact.id)}
+                    onClick={() => onViewContact(contact.id)}
                     className="rounded-lg p-2 text-[#a6adc8] transition-colors duration-200 hover:bg-[#313244] hover:text-[#F25C05]"
                     aria-label="Edit contact"
                   >
