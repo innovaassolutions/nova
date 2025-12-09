@@ -1,6 +1,6 @@
 # Story 1.2: Supabase Database Setup & Core Tables
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -115,14 +115,14 @@ so that we can store user and CRM data securely with proper schema validation.
   - [x] 7.3 Verify all table types exported correctly
   - [x] 7.4 Test TypeScript compilation with new types
 
-- [ ] 8. Verify all acceptance criteria satisfied (AC: All)
-  - [ ] 8.1 All 7 tables exist with correct schema
-  - [ ] 8.2 All 3 updated_at triggers active
-  - [ ] 8.3 All 13 indexes created for performance
-  - [ ] 8.4 RLS enabled with permissive policies on all tables
-  - [ ] 8.5 Database connection verified from Next.js
-  - [ ] 8.6 TypeScript types generated and working
-  - [ ] 8.7 Migration file committed to repository
+- [x] 8. Verify all acceptance criteria satisfied (AC: All)
+  - [x] 8.1 All 7 tables exist with correct schema
+  - [x] 8.2 All 3 updated_at triggers active
+  - [x] 8.3 All 13 indexes created for performance
+  - [x] 8.4 RLS enabled with permissive policies on all tables
+  - [x] 8.5 Database connection verified from Next.js
+  - [x] 8.6 TypeScript types generated and working
+  - [x] 8.7 Migration file committed to repository
 
 ## Dev Notes
 
