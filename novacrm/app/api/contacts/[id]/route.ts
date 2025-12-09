@@ -30,7 +30,7 @@ interface UpdateContactRequest {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient();
 
@@ -45,7 +45,7 @@ export async function GET(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Fetch contact with campaign data
     const { data: contact, error: contactError } = await supabase
@@ -89,7 +89,7 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient();
 
@@ -104,7 +104,7 @@ export async function PUT(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const body: UpdateContactRequest = await request.json();
 
     // Extract campaign_ids separately
@@ -193,7 +193,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient();
 
@@ -208,7 +208,7 @@ export async function DELETE(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Delete contact (campaign_contacts will cascade delete)
     const { error: deleteError } = await supabase
