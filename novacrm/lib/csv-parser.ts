@@ -23,6 +23,20 @@ export async function parseLinkedInCsv(file: File): Promise<ParseResult> {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      beforeFirstChunk: (chunk) => {
+        // Remove Notes section if present (lines before actual CSV headers)
+        const lines = chunk.split('\n');
+        const headerIndex = lines.findIndex(line =>
+          line.trim().startsWith('First Name') ||
+          line.includes('First Name,Last Name')
+        );
+
+        if (headerIndex > 0) {
+          // Found notes section, skip to headers
+          return lines.slice(headerIndex).join('\n');
+        }
+        return chunk;
+      },
       transformHeader: (header) => {
         // Normalize header names
         const headerMap: Record<string, string> = {
@@ -39,13 +53,7 @@ export async function parseLinkedInCsv(file: File): Promise<ParseResult> {
       complete: (results) => {
         const data = results.data as any[];
 
-        // Skip first 3 rows if they contain notes (check if first row has "Notes:" text)
-        let startIndex = 0;
-        if (data.length > 0 && data[0].firstName && data[0].firstName.includes('Notes:')) {
-          startIndex = 3;
-        }
-
-        for (let i = startIndex; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
           const row = data[i];
 
           // Skip empty rows
