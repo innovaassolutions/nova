@@ -8,7 +8,8 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import ContactDetailModal from './ContactDetailModal';
 
 interface ContactFormModalProps {
   isOpen: boolean;
@@ -41,12 +42,26 @@ interface FormErrors {
   campaign_ids?: string;
 }
 
+interface DuplicateContact {
+  id: string;
+  first_name: string;
+  last_name: string;
+  linkedin_url: string;
+  company: string | null;
+  position: string | null;
+  email: string | null;
+}
+
 export default function ContactFormModal({ isOpen, onClose, onSuccess }: ContactFormModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [isLinkedInValid, setIsLinkedInValid] = useState(false);
+  const [isDuplicate, setIsDuplicate] = useState(false);
+  const [duplicateMatches, setDuplicateMatches] = useState<DuplicateContact[]>([]);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
+  const [showDuplicateContactId, setShowDuplicateContactId] = useState<string | null>(null);
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
@@ -118,7 +133,36 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
     return pattern.test(email);
   };
 
-  const handleLinkedInBlur = () => {
+  const checkForDuplicates = async () => {
+    if (!formData.linkedin_url && (!formData.first_name || !formData.last_name)) {
+      return;
+    }
+
+    setCheckingDuplicate(true);
+    try {
+      const params = new URLSearchParams();
+      if (formData.linkedin_url) {
+        params.append('linkedin_url', formData.linkedin_url);
+      }
+      if (formData.first_name && formData.last_name) {
+        params.append('first_name', formData.first_name);
+        params.append('last_name', formData.last_name);
+      }
+
+      const response = await fetch(`/api/contacts/check-duplicate?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setIsDuplicate(data.isDuplicate);
+        setDuplicateMatches(data.matches || []);
+      }
+    } catch (error) {
+      console.error('Error checking for duplicates:', error);
+    } finally {
+      setCheckingDuplicate(false);
+    }
+  };
+
+  const handleLinkedInBlur = async () => {
     if (formData.linkedin_url) {
       const isValid = validateLinkedInUrl(formData.linkedin_url);
       setIsLinkedInValid(isValid);
@@ -127,12 +171,16 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
           ...prev,
           linkedin_url: 'Must be a valid LinkedIn profile URL (e.g., https://www.linkedin.com/in/username)'
         }));
+        setIsDuplicate(false);
+        setDuplicateMatches([]);
       } else {
         setErrors(prev => {
           const newErrors = { ...prev };
           delete newErrors.linkedin_url;
           return newErrors;
         });
+        // Check for duplicates after validating URL
+        await checkForDuplicates();
       }
     }
   };
@@ -164,9 +212,11 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
       });
     }
 
-    // Reset LinkedIn validation when URL changes
+    // Reset LinkedIn validation and duplicate check when URL changes
     if (field === 'linkedin_url') {
       setIsLinkedInValid(false);
+      setIsDuplicate(false);
+      setDuplicateMatches([]);
     }
   };
 
@@ -375,10 +425,39 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
               {errors.linkedin_url && (
                 <p className="mt-1 text-sm text-red-400">{errors.linkedin_url}</p>
               )}
-              {!errors.linkedin_url && !isLinkedInValid && (
+              {!errors.linkedin_url && !isLinkedInValid && !isDuplicate && (
                 <p className="mt-1 text-xs text-[#6c7086]">
                   Format: https://www.linkedin.com/in/username
                 </p>
+              )}
+              {checkingDuplicate && (
+                <p className="mt-1 text-xs text-[#a6adc8]">Checking for duplicates...</p>
+              )}
+              {!errors.linkedin_url && isDuplicate && duplicateMatches.length > 0 && (
+                <div className="mt-2 rounded-lg border-l-4 border-[#f9e2af] bg-[#f9e2af]/10 p-3">
+                  <div className="flex items-start gap-2">
+                    <ExclamationTriangleIcon className="h-5 w-5 flex-shrink-0 text-[#f9e2af]" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-[#f9e2af]">
+                        This contact may already exist
+                      </p>
+                      {duplicateMatches.map((match) => (
+                        <div key={match.id} className="mt-1 text-sm text-[#cdd6f4]">
+                          <span className="font-semibold">{match.first_name} {match.last_name}</span>
+                          {match.company && <span> at {match.company}</span>}
+                          {' • '}
+                          <button
+                            type="button"
+                            onClick={() => setShowDuplicateContactId(match.id)}
+                            className="text-[#89b4fa] hover:text-[#F25C05] hover:underline"
+                          >
+                            View Contact
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -526,7 +605,11 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-2 rounded-lg bg-[#F25C05] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#ff6b1a] disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                isDuplicate
+                  ? 'bg-[#f9e2af] text-[#1e1e2e] hover:bg-[#f9e2af]/90'
+                  : 'bg-[#F25C05] text-white hover:bg-[#ff6b1a]'
+              }`}
             >
               {isSubmitting ? (
                 <>
@@ -548,6 +631,11 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
                   </svg>
                   Creating...
                 </>
+              ) : isDuplicate ? (
+                <>
+                  <ExclamationTriangleIcon className="h-4 w-4" />
+                  Add Anyway
+                </>
               ) : (
                 'Create Contact'
               )}
@@ -568,6 +656,17 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
           }
         }
       `}</style>
+
+      {/* View Duplicate Contact Modal (layered above creation modal) */}
+      {showDuplicateContactId && (
+        <ContactDetailModal
+          contactId={showDuplicateContactId}
+          isOpen={true}
+          onClose={() => setShowDuplicateContactId(null)}
+          onContactUpdated={() => {}}
+          onContactDeleted={() => {}}
+        />
+      )}
     </div>
   );
 }
