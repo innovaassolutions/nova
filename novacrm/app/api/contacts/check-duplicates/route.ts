@@ -1,40 +1,118 @@
 /**
- * Check Duplicates API Route (Placeholder)
+ * Check Duplicates API Route
  *
- * Story: 3.2 - CSV Upload Page - Multistep Flow
- * TODO: Full implementation in Story 3.3
+ * Story: 3.3 - Duplicate Detection & Resolution Modal
  *
- * This is a placeholder endpoint that returns mock data for MVP testing.
- * Story 3.3 will implement the actual duplicate detection algorithm.
+ * Endpoint: POST /api/contacts/check-duplicates
+ * Purpose: Check for duplicate contacts during CSV import
+ *
+ * Duplicate matching logic (FR3.3, Architecture §3.4.2):
+ * - LinkedIn URL match (exact, case-insensitive) = High confidence
+ * - First Name + Last Name match (both exact, case-insensitive) = Medium confidence
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/app/lib/supabase/server';
+import { NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+interface ContactToCheck {
+  first_name: string;
+  last_name: string;
+  linkedin_url: string;
+  email?: string;
+  company?: string;
+  position?: string;
+  connected_on?: string;
+}
+
+interface DuplicateMatch {
+  csvContact: ContactToCheck;
+  existingContact: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    linkedin_url: string;
+    email: string | null;
+    company: string | null;
+    position: string | null;
+    connected_on: string | null;
+    created_at: string;
+  };
+  matchType: 'linkedin_url' | 'name';
+  confidence: 'high' | 'medium';
+  csvIndex: number; // Index in original CSV array
+}
+
+export async function POST(request: Request) {
   try {
-    // Parse request body
+    const supabase = await createClient();
     const body = await request.json();
-    const { contacts } = body;
+    const { contacts } = body as { contacts: ContactToCheck[] };
 
-    if (!contacts || !Array.isArray(contacts)) {
+    if (!contacts || contacts.length === 0) {
       return NextResponse.json(
-        { error: 'Invalid request: contacts array required' },
+        { error: 'No contacts provided' },
         { status: 400 }
       );
     }
 
-    // TODO: Implement in Story 3.3
-    // - Query existing contacts table
-    // - Check by (first_name + last_name) OR linkedin_url match
-    // - Return array of duplicates with match details
+    const duplicates: DuplicateMatch[] = [];
 
-    // For now, return empty duplicates array (no duplicates found)
+    // Check each contact for duplicates
+    for (let i = 0; i < contacts.length; i++) {
+      const contact = contacts[i];
+
+      // Check for LinkedIn URL match (high confidence)
+      const { data: linkedinMatches, error: linkedinError } = await supabase
+        .from('contacts')
+        .select('id, first_name, last_name, linkedin_url, email, company, position, connected_on, created_at')
+        .ilike('linkedin_url', contact.linkedin_url)
+        .limit(1);
+
+      if (linkedinError) {
+        console.error('Error checking LinkedIn URL duplicates:', linkedinError);
+        continue;
+      }
+
+      if (linkedinMatches && linkedinMatches.length > 0) {
+        duplicates.push({
+          csvContact: contact,
+          existingContact: linkedinMatches[0],
+          matchType: 'linkedin_url',
+          confidence: 'high',
+          csvIndex: i,
+        });
+        continue; // Skip name check if LinkedIn URL matched
+      }
+
+      // Check for name match (medium confidence)
+      const { data: nameMatches, error: nameError } = await supabase
+        .from('contacts')
+        .select('id, first_name, last_name, linkedin_url, email, company, position, connected_on, created_at')
+        .ilike('first_name', contact.first_name)
+        .ilike('last_name', contact.last_name)
+        .limit(1);
+
+      if (nameError) {
+        console.error('Error checking name duplicates:', nameError);
+        continue;
+      }
+
+      if (nameMatches && nameMatches.length > 0) {
+        duplicates.push({
+          csvContact: contact,
+          existingContact: nameMatches[0],
+          matchType: 'name',
+          confidence: 'medium',
+          csvIndex: i,
+        });
+      }
+    }
+
     return NextResponse.json({
-      duplicates: [],
+      duplicates,
       totalChecked: contacts.length,
-      message: 'Placeholder response - no duplicate detection implemented yet'
+      duplicatesFound: duplicates.length,
     });
-
   } catch (error) {
     console.error('Error in check-duplicates:', error);
     return NextResponse.json(

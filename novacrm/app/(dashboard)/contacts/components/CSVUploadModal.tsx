@@ -29,6 +29,39 @@ interface Campaign {
   status: string;
 }
 
+interface ParsedContact {
+  first_name: string;
+  last_name: string;
+  linkedin_url: string;
+  email?: string;
+  company?: string;
+  position?: string;
+  connected_on?: string;
+  source: string;
+}
+
+interface ExistingContact {
+  id: string;
+  first_name: string;
+  last_name: string;
+  linkedin_url: string;
+  email: string | null;
+  company: string | null;
+  position: string | null;
+  connected_on: string | null;
+  created_at: string;
+}
+
+interface DuplicateMatch {
+  csvContact: ParsedContact;
+  existingContact: ExistingContact;
+  matchType: 'linkedin_url' | 'name';
+  confidence: 'high' | 'medium';
+  csvIndex: number;
+}
+
+type DuplicateAction = 'update' | 'skip' | 'import';
+
 type Step = 1 | 2 | 3 | 4;
 
 export default function CSVUploadModal({ isOpen, onClose, onSuccess }: CSVUploadModalProps) {
@@ -47,6 +80,11 @@ export default function CSVUploadModal({ isOpen, onClose, onSuccess }: CSVUpload
   const [importSuccess, setImportSuccess] = useState(false);
   const [importStats, setImportStats] = useState({ imported: 0, updated: 0, skipped: 0 });
   const [campaignsLoaded, setCampaignsLoaded] = useState(false);
+
+  // Duplicate detection state (Story 3.3)
+  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
+  const [currentDuplicateIndex, setCurrentDuplicateIndex] = useState(0);
+  const [duplicateDecisions, setDuplicateDecisions] = useState<Map<number, DuplicateAction>>(new Map());
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -190,10 +228,9 @@ export default function CSVUploadModal({ isOpen, onClose, onSuccess }: CSVUpload
       await fetchCampaigns();
       setCurrentStep(2);
     } else if (currentStep === 2) {
-      // Check for duplicates and proceed to Step 4 (skip Step 3 for now)
+      // Check for duplicates (Story 3.3)
       setIsLoading(true);
       try {
-        // Placeholder: Call duplicate check API (Story 3.3)
         const response = await fetch('/api/contacts/check-duplicates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -202,28 +239,47 @@ export default function CSVUploadModal({ isOpen, onClose, onSuccess }: CSVUpload
 
         if (response.ok) {
           const data = await response.json();
-          // If no duplicates, skip to Step 4
-          if (data.duplicates?.length === 0) {
-            setCurrentStep(4);
+          if (data.duplicates && data.duplicates.length > 0) {
+            // Found duplicates, go to Step 3
+            setDuplicates(data.duplicates);
+            setCurrentDuplicateIndex(0);
+            // Initialize decisions: default to 'import' (treat as new)
+            const initialDecisions = new Map<number, DuplicateAction>();
+            data.duplicates.forEach((dup: DuplicateMatch) => {
+              initialDecisions.set(dup.csvIndex, 'import');
+            });
+            setDuplicateDecisions(initialDecisions);
+            setCurrentStep(3);
           } else {
-            // TODO: Handle duplicates in Step 3 (Story 3.3)
+            // No duplicates, skip to Step 4
             setCurrentStep(4);
           }
         }
       } catch (err) {
         console.error('Duplicate check error:', err);
-        setCurrentStep(4); // Proceed anyway for MVP
+        // On error, proceed to Step 4 anyway
+        setCurrentStep(4);
       } finally {
         setIsLoading(false);
       }
+    } else if (currentStep === 3) {
+      // From Step 3 (duplicates resolved) to Step 4
+      setCurrentStep(4);
     }
   };
 
   const handleBackStep = () => {
     if (currentStep === 2) {
       setCurrentStep(1);
-    } else if (currentStep === 4) {
+    } else if (currentStep === 3) {
       setCurrentStep(2);
+    } else if (currentStep === 4) {
+      // Go back to Step 3 if there were duplicates, otherwise Step 2
+      if (duplicates.length > 0) {
+        setCurrentStep(3);
+      } else {
+        setCurrentStep(2);
+      }
     }
   };
 
@@ -275,6 +331,51 @@ export default function CSVUploadModal({ isOpen, onClose, onSuccess }: CSVUpload
     handleClose();
   };
 
+  // Duplicate decision handlers (Story 3.3)
+  const setDuplicateDecision = (csvIndex: number, action: DuplicateAction) => {
+    setDuplicateDecisions(prev => {
+      const updated = new Map(prev);
+      updated.set(csvIndex, action);
+      return updated;
+    });
+  };
+
+  const handlePrevDuplicate = () => {
+    if (currentDuplicateIndex > 0) {
+      setCurrentDuplicateIndex(currentDuplicateIndex - 1);
+    }
+  };
+
+  const handleNextDuplicate = () => {
+    if (currentDuplicateIndex < duplicates.length - 1) {
+      setCurrentDuplicateIndex(currentDuplicateIndex + 1);
+    }
+  };
+
+  const handleUpdateAll = () => {
+    const updated = new Map(duplicateDecisions);
+    duplicates.forEach(dup => {
+      updated.set(dup.csvIndex, 'update');
+    });
+    setDuplicateDecisions(updated);
+  };
+
+  const handleSkipAll = () => {
+    const updated = new Map(duplicateDecisions);
+    duplicates.forEach(dup => {
+      updated.set(dup.csvIndex, 'skip');
+    });
+    setDuplicateDecisions(updated);
+  };
+
+  const handleImportAll = () => {
+    const updated = new Map(duplicateDecisions);
+    duplicates.forEach(dup => {
+      updated.set(dup.csvIndex, 'import');
+    });
+    setDuplicateDecisions(updated);
+  };
+
   const handleClose = () => {
     // Reset all state
     setCurrentStep(1);
@@ -288,6 +389,9 @@ export default function CSVUploadModal({ isOpen, onClose, onSuccess }: CSVUpload
     setImportSuccess(false);
     setShowCancelConfirm(false);
     setCampaignsLoaded(false);
+    setDuplicates([]);
+    setCurrentDuplicateIndex(0);
+    setDuplicateDecisions(new Map());
     onClose();
   };
 
@@ -415,7 +519,7 @@ export default function CSVUploadModal({ isOpen, onClose, onSuccess }: CSVUpload
               Step {currentStep} of 4: {
                 currentStep === 1 ? 'Upload CSV File' :
                 currentStep === 2 ? 'Preview Contacts' :
-                currentStep === 3 ? 'Check Duplicates' :
+                currentStep === 3 ? 'Resolve Duplicates' :
                 'Confirm Import'
               }
             </h2>
@@ -624,6 +728,213 @@ export default function CSVUploadModal({ isOpen, onClose, onSuccess }: CSVUpload
             </div>
           )}
 
+          {/* Step 3: Resolve Duplicates (Story 3.3) */}
+          {currentStep === 3 && duplicates.length > 0 && (
+            <div>
+              {/* Duplicate Count */}
+              <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <p className="text-sm text-yellow-400 flex items-center gap-2">
+                  <span className="text-lg">⚠️</span>
+                  Found {duplicates.length} potential duplicate{duplicates.length !== 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-[#a6adc8] mt-1">
+                  For each duplicate, choose an action
+                </p>
+              </div>
+
+              {/* Current Duplicate Card */}
+              {duplicates[currentDuplicateIndex] && (
+                <div className="mb-6 p-6 bg-[#313244] border border-[#45475a] rounded-xl">
+                  {/* Duplicate Header */}
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-[#cdd6f4]">
+                      {duplicates[currentDuplicateIndex].csvContact.first_name}{' '}
+                      {duplicates[currentDuplicateIndex].csvContact.last_name}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        duplicates[currentDuplicateIndex].confidence === 'high'
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                          : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                      }`}>
+                        {duplicates[currentDuplicateIndex].confidence === 'high' ? 'High confidence' : 'Possible duplicate'}
+                      </span>
+                      <span className="text-xs text-[#6c7086]">
+                        {duplicates[currentDuplicateIndex].matchType === 'linkedin_url' ? 'LinkedIn URL match' : 'Name match'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Comparison: CSV vs Existing */}
+                  <div className="grid grid-cols-2 gap-6 mb-6">
+                    {/* CSV Data */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold text-[#F25C05] uppercase tracking-wide mb-3">
+                        From CSV
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-[#6c7086]">Company:</span>
+                          <span className="ml-2 text-[#cdd6f4]">
+                            {duplicates[currentDuplicateIndex].csvContact.company || '—'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[#6c7086]">Position:</span>
+                          <span className="ml-2 text-[#cdd6f4]">
+                            {duplicates[currentDuplicateIndex].csvContact.position || '—'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[#6c7086]">Email:</span>
+                          <span className="ml-2 text-[#cdd6f4]">
+                            {duplicates[currentDuplicateIndex].csvContact.email || '—'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[#6c7086]">LinkedIn:</span>
+                          <span className="ml-2 text-[#89b4fa] text-xs break-all">
+                            {duplicates[currentDuplicateIndex].csvContact.linkedin_url}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Existing Data */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold text-[#89b4fa] uppercase tracking-wide mb-3">
+                        Already in Database
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-[#6c7086]">Company:</span>
+                          <span className="ml-2 text-[#cdd6f4]">
+                            {duplicates[currentDuplicateIndex].existingContact.company || '—'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[#6c7086]">Position:</span>
+                          <span className="ml-2 text-[#cdd6f4]">
+                            {duplicates[currentDuplicateIndex].existingContact.position || '—'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[#6c7086]">Email:</span>
+                          <span className="ml-2 text-[#cdd6f4]">
+                            {duplicates[currentDuplicateIndex].existingContact.email || '—'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[#6c7086]">LinkedIn:</span>
+                          <span className="ml-2 text-[#89b4fa] text-xs break-all">
+                            {duplicates[currentDuplicateIndex].existingContact.linkedin_url}
+                          </span>
+                        </div>
+                        <div className="pt-2">
+                          <span className="text-xs text-[#6c7086]">
+                            Created: {new Date(duplicates[currentDuplicateIndex].existingContact.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Selection */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-[#cdd6f4] mb-3">Choose Action:</h4>
+                    <label className="flex items-center gap-3 p-3 bg-[#1e1e2e] border border-[#45475a] rounded-lg cursor-pointer hover:border-[#F25C05] transition-colors">
+                      <input
+                        type="radio"
+                        name={`duplicate-${currentDuplicateIndex}`}
+                        checked={duplicateDecisions.get(duplicates[currentDuplicateIndex].csvIndex) === 'update'}
+                        onChange={() => setDuplicateDecision(duplicates[currentDuplicateIndex].csvIndex, 'update')}
+                        className="w-4 h-4 text-[#F25C05] bg-[#313244] border-[#45475a] focus:ring-[#F25C05] focus:ring-2"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-[#cdd6f4]">Update existing with CSV data</p>
+                        <p className="text-xs text-[#6c7086]">Overwrites the existing contact</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 bg-[#1e1e2e] border border-[#45475a] rounded-lg cursor-pointer hover:border-[#F25C05] transition-colors">
+                      <input
+                        type="radio"
+                        name={`duplicate-${currentDuplicateIndex}`}
+                        checked={duplicateDecisions.get(duplicates[currentDuplicateIndex].csvIndex) === 'skip'}
+                        onChange={() => setDuplicateDecision(duplicates[currentDuplicateIndex].csvIndex, 'skip')}
+                        className="w-4 h-4 text-[#F25C05] bg-[#313244] border-[#45475a] focus:ring-[#F25C05] focus:ring-2"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-[#cdd6f4]">Skip (keep existing)</p>
+                        <p className="text-xs text-[#6c7086]">Don't import this CSV row</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 bg-[#1e1e2e] border border-[#45475a] rounded-lg cursor-pointer hover:border-[#F25C05] transition-colors">
+                      <input
+                        type="radio"
+                        name={`duplicate-${currentDuplicateIndex}`}
+                        checked={duplicateDecisions.get(duplicates[currentDuplicateIndex].csvIndex) === 'import'}
+                        onChange={() => setDuplicateDecision(duplicates[currentDuplicateIndex].csvIndex, 'import')}
+                        className="w-4 h-4 text-[#F25C05] bg-[#313244] border-[#45475a] focus:ring-[#F25C05] focus:ring-2"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-[#cdd6f4]">Import as new contact</p>
+                        <p className="text-xs text-[#6c7086]">Create a new contact despite duplicate warning</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Duplicate Navigation */}
+              <div className="mb-6 flex items-center justify-between p-4 bg-[#1e1e2e] rounded-lg border border-[#313244]">
+                <button
+                  onClick={handlePrevDuplicate}
+                  disabled={currentDuplicateIndex === 0}
+                  className="flex items-center gap-2 px-3 py-2 bg-[#313244] hover:bg-[#45475a] text-[#cdd6f4] rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ArrowLeftIcon className="w-4 h-4" />
+                  Previous
+                </button>
+                <span className="text-sm text-[#a6adc8]">
+                  {currentDuplicateIndex + 1} of {duplicates.length}
+                </span>
+                <button
+                  onClick={handleNextDuplicate}
+                  disabled={currentDuplicateIndex === duplicates.length - 1}
+                  className="flex items-center gap-2 px-3 py-2 bg-[#313244] hover:bg-[#45475a] text-[#cdd6f4] rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Next
+                  <ArrowRightIcon className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-[#cdd6f4] mb-3">Quick Actions:</h4>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleUpdateAll}
+                    className="flex-1 px-4 py-2 bg-[#313244] hover:bg-[#45475a] text-[#cdd6f4] text-sm font-medium rounded-lg border border-[#45475a] transition-colors"
+                  >
+                    Update All
+                  </button>
+                  <button
+                    onClick={handleSkipAll}
+                    className="flex-1 px-4 py-2 bg-[#313244] hover:bg-[#45475a] text-[#cdd6f4] text-sm font-medium rounded-lg border border-[#45475a] transition-colors"
+                  >
+                    Skip All
+                  </button>
+                  <button
+                    onClick={handleImportAll}
+                    className="flex-1 px-4 py-2 bg-[#313244] hover:bg-[#45475a] text-[#cdd6f4] text-sm font-medium rounded-lg border border-[#45475a] transition-colors"
+                  >
+                    Import All
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Step 4: Confirm and Import */}
           {currentStep === 4 && parseResult && (
             <div>
@@ -742,6 +1053,16 @@ export default function CSVUploadModal({ isOpen, onClose, onSuccess }: CSVUpload
                 className="flex items-center gap-2 bg-[#F25C05] hover:bg-[#D94C04] text-white font-semibold px-4 py-2 rounded-lg shadow-[0_2px_8px_rgba(242,92,5,0.3)] hover:shadow-[0_4px_12px_rgba(242,92,5,0.4)] hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 {isLoading ? 'Checking...' : 'Next: Check Duplicates'}
+                <ArrowRightIcon className="w-4 h-4" />
+              </button>
+            )}
+
+            {currentStep === 3 && (
+              <button
+                onClick={handleNextStep}
+                className="flex items-center gap-2 bg-[#F25C05] hover:bg-[#D94C04] text-white font-semibold px-4 py-2 rounded-lg shadow-[0_2px_8px_rgba(242,92,5,0.3)] hover:shadow-[0_4px_12px_rgba(242,92,5,0.4)] hover:-translate-y-0.5 transition-all duration-200"
+              >
+                Next: Confirm Import
                 <ArrowRightIcon className="w-4 h-4" />
               </button>
             )}
