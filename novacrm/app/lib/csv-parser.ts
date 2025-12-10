@@ -39,11 +39,16 @@ export interface ParsedContact {
 }
 
 /**
+ * CSV validation error with row number and message
+ */
+export type CSVValidationError = { row: number; message: string };
+
+/**
  * CSV parse result with success and error tracking
  */
 export interface CSVParseResult {
   contacts: ParsedContact[];
-  errors: Array<{ row: number; message: string }>;
+  errors: CSVValidationError[];
   totalRows: number;
   validRows: number;
 }
@@ -66,7 +71,7 @@ export interface CSVParseResult {
 export async function parseLinkedInCSV(file: File): Promise<CSVParseResult> {
   return new Promise((resolve, reject) => {
     const contacts: ParsedContact[] = [];
-    const errors: Array<{ row: number; message: string }> = [];
+    const errors: CSVValidationError[] = [];
     let totalRows = 0;
 
     Papa.parse<LinkedInCSVRow>(file, {
