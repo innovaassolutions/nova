@@ -45,12 +45,12 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Deal Pipeline & Stage Tracking (5 stories)
-  epic-4: backlog
-  4-1-deals-database-table-pipeline-stage-relationships: backlog
-  4-2-create-deal-form-contact-linking: backlog
-  4-3-deal-detail-view-edit-modal: backlog
-  4-4-deal-list-view-pipeline-stage-filtering: backlog
-  4-5-pipeline-value-calculation-deal-metrics: backlog
+  epic-4: in-progress
+  4-1-deals-database-table-pipeline-stage-relationships: review
+  4-2-create-deal-form-contact-linking: review
+  4-3-deal-detail-view-edit-modal: ready-for-dev
+  4-4-deal-list-view-pipeline-stage-filtering: ready-for-dev
+  4-5-pipeline-value-calculation-deal-metrics: ready-for-dev
   epic-4-retrospective: optional
 
   # Epic 5: Dashboard & Pipeline Analytics (5 stories)

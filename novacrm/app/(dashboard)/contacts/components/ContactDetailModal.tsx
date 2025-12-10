@@ -8,9 +8,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { XMarkIcon, PencilIcon, TrashIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PencilIcon, TrashIcon, ArrowLeftIcon, PlusIcon } from '@heroicons/react/24/outline';
 import ContactAvatar from '../../components/ContactAvatar';
 import CampaignBadges from './CampaignBadges';
+import CreateDealModal from './CreateDealModal';
 import { useToast } from '../../components/ToastContext';
 
 interface Contact {
@@ -56,6 +57,7 @@ export default function ContactDetailModal({
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showCreateDealModal, setShowCreateDealModal] = useState(false);
   const { showToast } = useToast();
 
   // Edit form state
@@ -191,6 +193,13 @@ export default function ContactDetailModal({
                 <div className="flex gap-2">
                   {!isEditMode ? (
                     <>
+                      <button
+                        onClick={() => setShowCreateDealModal(true)}
+                        className="flex items-center gap-2 rounded-lg bg-[#F25C05] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#ff6b1a]"
+                      >
+                        <PlusIcon className="h-4 w-4" />
+                        New Deal
+                      </button>
                       <button
                         onClick={handleEditClick}
                         className="flex items-center gap-2 rounded-lg border border-[#313244] bg-transparent px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-colors hover:bg-[#313244]"
@@ -374,6 +383,18 @@ export default function ContactDetailModal({
             </div>
           </div>
         </>
+      )}
+
+      {/* Create Deal Modal */}
+      {contact && (
+        <CreateDealModal
+          contactId={contact.id}
+          contactName={`${contact.first_name} ${contact.last_name}`}
+          contactCompany={contact.company}
+          isOpen={showCreateDealModal}
+          onClose={() => setShowCreateDealModal(false)}
+          onDealCreated={fetchContact}
+        />
       )}
     </>
   );
