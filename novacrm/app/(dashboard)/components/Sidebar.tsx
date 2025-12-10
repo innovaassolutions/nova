@@ -78,30 +78,19 @@ export default function Sidebar() {
         {/* Logo Section */}
         <div className="mb-6 pb-6 border-b border-[#313244]">
           <div className="flex justify-center items-center overflow-hidden">
-            {isExpanded ? (
-              <Image
-                src="/nova-crm-logo.svg"
-                alt="NovaCRM"
-                width={200}
-                height={60}
-                priority
-                className="transition-opacity duration-300"
-              />
-            ) : (
-              <Image
-                src="/nova-crm-icon.svg"
-                alt="Nova"
-                width={40}
-                height={40}
-                priority
-                className="transition-opacity duration-300"
-              />
-            )}
+            <Image
+              src="/nova-crm-icon.svg"
+              alt="Nova"
+              width={40}
+              height={40}
+              priority
+              className="transition-opacity duration-300"
+            />
           </div>
         </div>
 
       {/* Main Navigation Section */}
-      <nav className="space-y-8 flex-1 overflow-y-auto">
+      <nav className="space-y-8 flex-1 min-h-0 overflow-y-auto">
         <div>
           {isExpanded && (
             <h3 className="text-[#7f849c] text-xs font-semibold uppercase mb-2 transition-opacity duration-300">
@@ -187,7 +176,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Logout Button - Pushed to Bottom */}
-      <div className="mt-auto">
+      <div className="mt-auto flex-shrink-0 pt-4">
         <LogoutButton isCollapsed={!isExpanded} />
       </div>
     </aside>
