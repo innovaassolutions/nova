@@ -6,12 +6,14 @@
  * Main page for viewing and managing contacts with search/filter/sort.
  * Story: 2.2 - Contact Creation Form
  * Story: 2.3 - Contacts List with Search & Filter
+ * Story: 3.2 - CSV Upload Page - Multistep Flow
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { PlusIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import ContactFormModal from './components/ContactFormModal';
 import ContactDetailModal from './components/ContactDetailModal';
+import CSVUploadModal from './components/CSVUploadModal';
 import FilterBar from './components/FilterBar';
 import ContactsTable from './components/ContactsTable';
 import ContactCard from './components/ContactCard';
@@ -47,6 +49,7 @@ interface Campaign {
 export default function ContactsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -150,6 +153,21 @@ export default function ContactsPage() {
     fetchContacts();
   };
 
+  const handleOpenUploadModal = () => {
+    setIsUploadModalOpen(true);
+  };
+
+  const handleCloseUploadModal = () => {
+    setIsUploadModalOpen(false);
+  };
+
+  const handleUploadSuccess = () => {
+    showToast('Contacts imported successfully!', 'success');
+    setIsUploadModalOpen(false);
+    // Refresh contacts list
+    fetchContacts();
+  };
+
   return (
     <div className="max-w-[1200px]">
       {/* Page Header */}
@@ -164,9 +182,8 @@ export default function ContactsPage() {
         {/* Action Buttons */}
         <div className="flex gap-3">
           <button
-            disabled
-            className="flex items-center gap-2 rounded-lg border border-[#313244] bg-transparent px-4 py-2 text-sm font-medium text-[#6c7086] opacity-50 cursor-not-allowed"
-            title="CSV upload coming in Epic 3"
+            onClick={handleOpenUploadModal}
+            className="flex items-center gap-2 rounded-lg border border-[#313244] bg-transparent px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-colors duration-200 hover:bg-[#313244] hover:border-[#45475a] focus:outline-none focus:ring-2 focus:ring-[#F25C05] focus:ring-offset-2 focus:ring-offset-[#1e1e2e]"
           >
             <ArrowUpTrayIcon className="h-5 w-5" />
             Upload CSV
@@ -253,6 +270,13 @@ export default function ContactsPage() {
           onContactDeleted={handleContactDeleted}
         />
       )}
+
+      {/* CSV Upload Modal */}
+      <CSVUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={handleCloseUploadModal}
+        onSuccess={handleUploadSuccess}
+      />
     </div>
   );
 }
