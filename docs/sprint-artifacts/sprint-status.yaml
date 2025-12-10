@@ -38,7 +38,7 @@ development_status:
   # Epic 3: Bulk Contact Import & Campaign Management (5 stories)
   epic-3: in-progress
   3-1-csv-parser-linkedin-connections-export: review
-  3-2-csv-upload-page-multistep-flow: review
+  3-2-csv-upload-page-multistep-flow: done
   3-3-duplicate-detection-resolution-modal: backlog
   3-4-batch-import-api-transaction-handling: backlog
   3-5-campaign-crud-interface-admin-settings: backlog

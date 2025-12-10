@@ -1,6 +1,6 @@
 # Story 3.2: CSV Upload Page - Multistep Flow
 
-Status: review
+Status: done
 
 ## Story
 
