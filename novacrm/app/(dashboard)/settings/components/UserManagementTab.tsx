@@ -9,6 +9,7 @@ import {
   EllipsisVerticalIcon,
   TrashIcon,
   KeyIcon,
+  PaperAirplaneIcon,
 } from '@heroicons/react/24/outline'
 import InviteUserModal from './InviteUserModal'
 
@@ -206,6 +207,28 @@ export default function UserManagementTab() {
     }
   }
 
+  const handleResendInvite = async (user: UserRecord) => {
+    if (!confirm(`Resend invitation to ${user.email}?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/users/${user.id}/resend-invite`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        alert(`Error: ${data.error}`)
+        return
+      }
+
+      alert('Invitation resent successfully')
+    } catch (error) {
+      alert('Failed to resend invitation')
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -319,6 +342,15 @@ export default function UserManagementTab() {
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center justify-end gap-2">
+                      {user.status === 'pending' && (
+                        <button
+                          onClick={() => handleResendInvite(user)}
+                          className="p-2 text-green-500 hover:bg-mocha-surface0 rounded-lg transition-colors"
+                          title="Resend Invitation"
+                        >
+                          <PaperAirplaneIcon className="w-5 h-5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           setSelectedUser(user)
