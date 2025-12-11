@@ -54,14 +54,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_callback_error`)
       }
 
-      // Check if this is a password recovery flow (invited user setting password)
+      // Check if this is a password recovery flow
       if (type === 'recovery') {
         return NextResponse.redirect(`${requestUrl.origin}/update-password`)
       }
 
-      // Check if this is a new user accepting an invite (needs password setup)
-      if (data.user && data.user.user_metadata?.needs_password_setup === true) {
-        // First time accepting invite - redirect to set password
+      // Check if this is an invite acceptance (user confirming their email from invite)
+      if (type === 'invite' || (data.user && data.user.user_metadata?.needs_password_setup === true)) {
+        // Invited user confirmed email - redirect to password setup
         return NextResponse.redirect(`${requestUrl.origin}/update-password`)
       }
     } catch (err) {

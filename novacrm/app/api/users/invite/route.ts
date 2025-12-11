@@ -36,7 +36,10 @@ export async function POST(request: NextRequest) {
   // 4. Invite user via Supabase Admin API
   const adminClient = createAdminClient()
 
-  // Use inviteUserByEmail which handles the complete invite flow
+  // Use inviteUserByEmail - this will:
+  // 1. Create the user in auth.users
+  // 2. Send them an invite email with a confirmation link
+  // 3. The link will redirect to our auth/callback after email confirmation
   const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     email,
     {
@@ -45,7 +48,7 @@ export async function POST(request: NextRequest) {
         role,
         needs_password_setup: true
       },
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/update-password`
     }
   )
 
