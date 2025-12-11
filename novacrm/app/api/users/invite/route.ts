@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 2. Parse request body
-  const { email, full_name, role, send_email } = await request.json()
+  const { email, full_name, role } = await request.json()
 
   // 3. Validate inputs
   if (!email || !full_name || !role) {
@@ -33,56 +33,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
   }
 
-  // 4. Create user via Supabase Admin API
+  // 4. Invite user via Supabase Admin API
   const adminClient = createAdminClient()
 
-  // Create user with a temporary password and auto-confirm email
-  const tempPassword = Math.random().toString(36).slice(-12) + 'A1!' // Random temp password
-
-  const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+  // Use inviteUserByEmail which handles the complete invite flow
+  const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     email,
-    password: tempPassword,
-    email_confirm: true, // Auto-confirm so user can log in
-    user_metadata: {
-      full_name,
-      role,
-      needs_password_setup: true
+    {
+      data: {
+        full_name,
+        role,
+        needs_password_setup: true
+      },
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
     }
-  })
+  )
 
-  if (createError || !newUser) {
-    console.error('User creation error:', createError)
+  if (inviteError || !inviteData) {
+    console.error('Invitation error:', inviteError)
     return NextResponse.json({
-      error: 'Failed to create user',
-      details: createError?.message || 'Unknown error'
+      error: 'Failed to invite user',
+      details: inviteError?.message || 'Unknown error'
     }, { status: 500 })
   }
 
   // 5. User is automatically created in public.users via trigger
   // Trigger: on_auth_user_created (from Story 1.7)
 
-  // 6. Send password reset email so they can set their own password
-  try {
-    const { error: resetError } = await adminClient.auth.resetPasswordForEmail(
-      email,
-      {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?type=recovery`
-      }
-    )
-
-    if (resetError) {
-      console.error('Password reset email error:', resetError)
-      // User is created but email failed - they can request password reset manually
-    }
-  } catch (error) {
-    console.error('Failed to send password reset email:', error)
-  }
-
   return NextResponse.json({
     success: true,
     user: {
-      id: newUser.user.id,
-      email: newUser.user.email,
+      id: inviteData.user.id,
+      email: inviteData.user.email,
       status: 'pending'
     }
   })

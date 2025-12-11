@@ -37,22 +37,22 @@ export async function POST(
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
-  // Resend password reset email using admin client
+  // Resend invite using admin client
   const adminClient = createAdminClient()
 
   try {
-    const { error: resetError } = await adminClient.auth.resetPasswordForEmail(
+    const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
       userData.email,
       {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?type=recovery`
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
       }
     )
 
-    if (resetError) {
-      console.error('Resend invite error:', resetError)
+    if (inviteError) {
+      console.error('Resend invite error:', inviteError)
       return NextResponse.json({
         error: 'Failed to resend invitation',
-        details: resetError.message
+        details: inviteError.message
       }, { status: 500 })
     }
 
