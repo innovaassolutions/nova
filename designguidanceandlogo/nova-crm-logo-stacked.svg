@@ -1,0 +1,31 @@
+<svg width="140" height="100" viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Nova Icon - Exploding Star Concept -->
+  <g id="nova-icon" transform="translate(40, 0)">
+    <!-- Center core -->
+    <circle cx="30" cy="30" r="6" fill="#F25C05"/>
+    
+    <!-- Primary rays -->
+    <path d="M30 10 L30 18" stroke="#F25C05" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M30 42 L30 50" stroke="#F25C05" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M10 30 L18 30" stroke="#F25C05" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M42 30 L50 30" stroke="#F25C05" stroke-width="2.5" stroke-linecap="round"/>
+    
+    <!-- Diagonal rays -->
+    <path d="M16 16 L21.5 21.5" stroke="#ff7b3d" stroke-width="2" stroke-linecap="round"/>
+    <path d="M38.5 38.5 L44 44" stroke="#ff7b3d" stroke-width="2" stroke-linecap="round"/>
+    <path d="M44 16 L38.5 21.5" stroke="#ff7b3d" stroke-width="2" stroke-linecap="round"/>
+    <path d="M21.5 38.5 L16 44" stroke="#ff7b3d" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Accent particles -->
+    <circle cx="14" cy="24" r="1.5" fill="#89b4fa" opacity="0.8"/>
+    <circle cx="46" cy="36" r="1.5" fill="#89b4fa" opacity="0.8"/>
+    <circle cx="24" cy="14" r="1.5" fill="#74c7ec" opacity="0.6"/>
+    <circle cx="36" cy="46" r="1.5" fill="#74c7ec" opacity="0.6"/>
+  </g>
+  
+  <!-- Nova Text -->
+  <text x="70" y="78" text-anchor="middle" font-family="Plus Jakarta Sans, system-ui, sans-serif" font-size="24" font-weight="800" fill="#cdd6f4" letter-spacing="-0.5">Nova</text>
+  
+  <!-- CRM Text -->
+  <text x="70" y="96" text-anchor="middle" font-family="Plus Jakarta Sans, system-ui, sans-serif" font-size="18" font-weight="400" fill="#a6adc8" letter-spacing="1">CRM</text>
+</svg>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova CRM - Logo Showcase</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Catppuccin Mocha Base Colors */
+            --mocha-base: #1e1e2e;
+            --mocha-mantle: #181825;
+            --mocha-crust: #11111b;
+            --mocha-surface0: #313244;
+            --mocha-surface1: #45475a;
+            --mocha-text: #cdd6f4;
+            --mocha-subtext0: #a6adc8;
+            --mocha-subtext1: #bac2de;
+            --innovaas-orange: #F25C05;
+            --mocha-blue: #89b4fa;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--mocha-base);
+            color: var(--mocha-text);
+            padding: 60px 40px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--innovaas-orange), #ff7b3d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: var(--mocha-subtext0);
+            margin-bottom: 60px;
+        }
+
+        .section {
+            margin-bottom: 80px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--mocha-text);
+        }
+
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+
+        .logo-card {
+            background: var(--mocha-mantle);
+            border: 1px solid var(--mocha-surface0);
+            border-radius: 16px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
+        }
+
+        .logo-card img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .logo-card h3 {
+            margin-top: 24px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--mocha-subtext1);
+        }
+
+        .logo-card p {
+            margin-top: 8px;
+            font-size: 14px;
+            color: var(--mocha-subtext0);
+            text-align: center;
+        }
+
+        .color-showcase {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+
+        .color-item {
+            background: var(--mocha-mantle);
+            border: 1px solid var(--mocha-surface0);
+            border-radius: 12px;
+            padding: 24px;
+            min-width: 200px;
+        }
+
+        .color-swatch {
+            width: 100%;
+            height: 80px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .color-name {
+            font-weight: 600;
+            color: var(--mocha-text);
+            margin-bottom: 4px;
+        }
+
+        .color-hex {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--mocha-subtext0);
+        }
+
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .usage-card {
+            background: var(--mocha-mantle);
+            border: 1px solid var(--mocha-surface0);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .usage-card h4 {
+            color: var(--innovaas-orange);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .usage-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .usage-card li {
+            padding: 8px 0;
+            color: var(--mocha-subtext0);
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .usage-card li:before {
+            content: "•";
+            color: var(--mocha-blue);
+            position: absolute;
+            left: 0;
+        }
+
+        .preview-backgrounds {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .preview-bg {
+            padding: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .bg-dark {
+            background: var(--mocha-mantle);
+        }
+
+        .bg-darker {
+            background: var(--mocha-crust);
+        }
+
+        .bg-light {
+            background: #f5f5f5;
+        }
+
+        .bg-white {
+            background: #ffffff;
+        }
+
+        code {
+            background: var(--mocha-surface0);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--innovaas-orange);
+        }
+
+        .download-section {
+            background: var(--mocha-mantle);
+            border: 2px solid var(--innovaas-orange);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .download-section h3 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        .download-section p {
+            color: var(--mocha-subtext0);
+            margin-bottom: 24px;
+        }
+
+        .specs-table {
+            background: var(--mocha-mantle);
+            border: 1px solid var(--mocha-surface0);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .specs-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .specs-table th,
+        .specs-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--mocha-surface0);
+        }
+
+        .specs-table th {
+            color: var(--innovaas-orange);
+            font-weight: 600;
+        }
+
+        .specs-table td {
+            color: var(--mocha-subtext0);
+        }
+
+        .specs-table tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Nova CRM Logo System</h1>
+        <p class="subtitle">Complete brand identity package with usage guidelines</p>
+
+        <!-- Logo Variations -->
+        <section class="section">
+            <h2 class="section-title">Logo Variations</h2>
+            <div class="logo-grid">
+                <div class="logo-card">
+                    <img src="nova-crm-logo.svg" alt="Nova CRM Logo Horizontal">
+                    <h3>Horizontal Logo</h3>
+                    <p>Primary logo for headers, navigation, and wide layouts</p>
+                </div>
+
+                <div class="logo-card">
+                    <img src="nova-crm-logo-stacked.svg" alt="Nova CRM Logo Stacked">
+                    <h3>Stacked Logo</h3>
+                    <p>Vertical layout for sidebars and compact spaces</p>
+                </div>
+
+                <div class="logo-card">
+                    <img src="nova-crm-icon.svg" alt="Nova CRM Icon">
+                    <h3>Icon Only</h3>
+                    <p>For favicons, app icons, and small spaces</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Color Palette -->
+        <section class="section">
+            <h2 class="section-title">Logo Colors</h2>
+            <div class="color-showcase">
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #F25C05;"></div>
+                    <div class="color-name">Innovaas Orange</div>
+                    <div class="color-hex">#F25C05</div>
+                </div>
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #ff7b3d;"></div>
+                    <div class="color-name">Orange Soft</div>
+                    <div class="color-hex">#ff7b3d</div>
+                </div>
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #89b4fa;"></div>
+                    <div class="color-name">Mocha Blue</div>
+                    <div class="color-hex">#89b4fa</div>
+                </div>
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #74c7ec;"></div>
+                    <div class="color-name">Mocha Sapphire</div>
+                    <div class="color-hex">#74c7ec</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Guidelines -->
+        <section class="section">
+            <h2 class="section-title">Usage Guidelines</h2>
+            <div class="usage-grid">
+                <div class="usage-card">
+                    <h4>✅ Do</h4>
+                    <ul>
+                        <li>Use on dark backgrounds (#1e1e2e or darker)</li>
+                        <li>Maintain minimum clear space of 20px around logo</li>
+                        <li>Scale proportionally when resizing</li>
+                        <li>Use icon version for sizes below 100px width</li>
+                        <li>Keep the orange accent as the primary brand color</li>
+                    </ul>
+                </div>
+
+                <div class="usage-card">
+                    <h4>❌ Don't</h4>
+                    <ul>
+                        <li>Don't rotate or distort the logo</li>
+                        <li>Don't change the colors without approval</li>
+                        <li>Don't add effects like drop shadows or outlines</li>
+                        <li>Don't use on busy or low-contrast backgrounds</li>
+                        <li>Don't recreate or redraw the logo</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Background Examples -->
+        <section class="section">
+            <h2 class="section-title">Background Examples</h2>
+            <div class="preview-backgrounds">
+                <div class="preview-bg bg-dark">
+                    <img src="nova-crm-logo.svg" alt="Logo on dark background" style="max-width: 180px;">
+                </div>
+                <div class="preview-bg bg-darker">
+                    <img src="nova-crm-logo.svg" alt="Logo on darker background" style="max-width: 180px;">
+                </div>
+            </div>
+            <p style="margin-top: 16px; color: var(--mocha-subtext0);">
+                ℹ️ The logo is optimized for dark backgrounds (Catppuccin Mocha theme). 
+                For light backgrounds, a separate variant would be needed with adjusted colors.
+            </p>
+        </section>
+
+        <!-- Technical Specifications -->
+        <section class="section">
+            <h2 class="section-title">Technical Specifications</h2>
+            <div class="specs-table">
+                <table>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>Format</td>
+                        <td>SVG (Scalable Vector Graphics)</td>
+                    </tr>
+                    <tr>
+                        <td>Primary Font</td>
+                        <td>Plus Jakarta Sans (800 weight for "Nova", 400 for "CRM")</td>
+                    </tr>
+                    <tr>
+                        <td>Icon Concept</td>
+                        <td>Exploding star/nova with radiating rays</td>
+                    </tr>
+                    <tr>
+                        <td>Minimum Width</td>
+                        <td>120px (horizontal), 60px (icon only)</td>
+                    </tr>
+                    <tr>
+                        <td>Clear Space</td>
+                        <td>20px minimum on all sides</td>
+                    </tr>
+                    <tr>
+                        <td>Primary Color</td>
+                        <td>#F25C05 (Innovaas Orange)</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <!-- Design Concept -->
+        <section class="section">
+            <h2 class="section-title">Design Concept</h2>
+            <div class="usage-card">
+                <p style="color: var(--mocha-text); line-height: 1.8;">
+                    The Nova CRM logo embodies the concept of <strong style="color: var(--innovaas-orange);">explosive growth and transformation</strong>. 
+                    A nova is a stellar explosion that dramatically increases a star's brightness — symbolizing how Nova CRM 
+                    illuminates customer relationships and drives business growth.
+                </p>
+                <br>
+                <p style="color: var(--mocha-subtext0); line-height: 1.8;">
+                    The radiating star design uses the <strong>Innovaas Orange</strong> (#F25C05) as the core, with softer orange rays 
+                    and blue accent particles representing data points and connections. The geometric, modern aesthetic 
+                    aligns with the Catppuccin Mocha color scheme, creating a cohesive brand identity that feels both 
+                    professional and innovative.
+                </p>
+            </div>
+        </section>
+
+        <!-- Download Section -->
+        <section class="section">
+            <div class="download-section">
+                <h3>Logo Files Ready</h3>
+                <p>All logo variations have been created in SVG format with the Catppuccin Mocha + Innovaas Orange theme.</p>
+                <p style="margin-top: 12px;">
+                    Files: <code>nova-crm-logo.svg</code> · <code>nova-crm-logo-stacked.svg</code> · <code>nova-crm-icon.svg</code>
+                </p>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
