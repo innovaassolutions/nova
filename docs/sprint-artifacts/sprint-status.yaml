@@ -39,7 +39,7 @@ development_status:
   epic-3: in-progress
   3-1-csv-parser-linkedin-connections-export: done
   3-2-csv-upload-page-multistep-flow: done
-  3-3-duplicate-detection-resolution-modal: in-progress
+  3-3-duplicate-detection-resolution-modal: done
   3-4-batch-import-api-transaction-handling: backlog
   3-5-campaign-crud-interface-admin-settings: backlog
   epic-3-retrospective: optional
@@ -48,8 +48,8 @@ development_status:
   epic-4: in-progress
   4-1-deals-database-table-pipeline-stage-relationships: review
   4-2-create-deal-form-contact-linking: review
-  4-3-deal-detail-view-edit-modal: ready-for-dev
-  4-4-deal-list-view-pipeline-stage-filtering: ready-for-dev
+  4-3-deal-detail-view-edit-modal: review
+  4-4-deal-list-view-pipeline-stage-filtering: review
   4-5-pipeline-value-calculation-deal-metrics: ready-for-dev
   epic-4-retrospective: optional
 

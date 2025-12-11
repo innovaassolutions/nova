@@ -8,10 +8,11 @@
  */
 
 import { useState, useEffect } from 'react';
-import { XMarkIcon, PencilIcon, TrashIcon, ArrowLeftIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PencilIcon, TrashIcon, ArrowLeftIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/outline';
 import ContactAvatar from '../../components/ContactAvatar';
 import CampaignBadges from './CampaignBadges';
 import CreateDealModal from './CreateDealModal';
+import DealDetailModal from '../../components/DealDetailModal';
 import { useToast } from '../../components/ToastContext';
 
 interface Contact {
@@ -37,6 +38,20 @@ interface Contact {
   }>;
 }
 
+interface Deal {
+  id: string;
+  title: string;
+  value: number | null;
+  probability: number | null;
+  status: 'Open' | 'Won' | 'Lost';
+  expected_close_date: string | null;
+  stage: {
+    id: string;
+    name: string;
+    order_num: number;
+  };
+}
+
 interface ContactDetailModalProps {
   contactId: string;
   isOpen: boolean;
@@ -53,11 +68,14 @@ export default function ContactDetailModal({
   onContactDeleted,
 }: ContactDetailModalProps) {
   const [contact, setContact] = useState<Contact | null>(null);
+  const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCreateDealModal, setShowCreateDealModal] = useState(false);
+  const [showDealDetailModal, setShowDealDetailModal] = useState(false);
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const { showToast } = useToast();
 
   // Edit form state
@@ -82,6 +100,9 @@ export default function ContactDetailModal({
       const data = await response.json();
       setContact(data.contact);
       setEditData(data.contact);
+
+      // Fetch deals for this contact
+      await fetchDeals();
     } catch (err) {
       console.error('Error fetching contact:', err);
       showToast('Failed to load contact details', 'error');
@@ -89,6 +110,31 @@ export default function ContactDetailModal({
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchDeals = async () => {
+    try {
+      const response = await fetch(`/api/deals?contact_id=${contactId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setDeals(data.deals || []);
+      }
+    } catch (err) {
+      console.error('Error fetching deals:', err);
+    }
+  };
+
+  const handleViewDeal = (dealId: string) => {
+    setSelectedDealId(dealId);
+    setShowDealDetailModal(true);
+  };
+
+  const formatCurrency = (value: number | null) => {
+    if (value === null) return 'N/A';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value);
   };
 
   const handleEditClick = () => {
@@ -347,6 +393,60 @@ export default function ContactDetailModal({
                     )}
                   </div>
                 </div>
+
+                {/* Deals Section */}
+                <div className="mt-6 space-y-4 rounded-xl border border-[#313244] bg-[#181825] p-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-[#cdd6f4]">Deals ({deals.length})</h3>
+                  </div>
+
+                  {deals.length === 0 ? (
+                    <p className="text-sm text-[#6c7086]">No deals yet. Click "New Deal" to create one.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {deals.map((deal) => (
+                        <div
+                          key={deal.id}
+                          onClick={() => handleViewDeal(deal.id)}
+                          className="flex items-center justify-between rounded-lg border border-[#313244] bg-[#1e1e2e] p-4 transition-all hover:border-[#F25C05] hover:shadow-lg cursor-pointer"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <h4 className="text-base font-semibold text-[#cdd6f4]">{deal.title}</h4>
+                              <span
+                                className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${
+                                  deal.status === 'Open'
+                                    ? 'bg-green-500/20 text-green-400 border-green-500/50'
+                                    : deal.status === 'Won'
+                                    ? 'bg-blue-500/20 text-blue-400 border-blue-500/50'
+                                    : 'bg-red-500/20 text-red-400 border-red-500/50'
+                                }`}
+                              >
+                                {deal.status}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex items-center gap-4 text-sm text-[#a6adc8]">
+                              <span>{formatCurrency(deal.value)}</span>
+                              <span>•</span>
+                              <span>{deal.probability || 0}% probability</span>
+                              <span>•</span>
+                              <span>{deal.stage.name}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDeal(deal.id);
+                            }}
+                            className="rounded-lg border border-[#313244] bg-transparent p-2 text-[#a6adc8] transition-colors hover:bg-[#313244] hover:text-[#cdd6f4]"
+                          >
+                            <EyeIcon className="h-5 w-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ) : null}
@@ -394,6 +494,20 @@ export default function ContactDetailModal({
           isOpen={showCreateDealModal}
           onClose={() => setShowCreateDealModal(false)}
           onDealCreated={fetchContact}
+        />
+      )}
+
+      {/* Deal Detail Modal */}
+      {selectedDealId && (
+        <DealDetailModal
+          dealId={selectedDealId}
+          isOpen={showDealDetailModal}
+          onClose={() => {
+            setShowDealDetailModal(false);
+            setSelectedDealId(null);
+          }}
+          onDealUpdated={fetchDeals}
+          onDealDeleted={fetchDeals}
         />
       )}
     </>
