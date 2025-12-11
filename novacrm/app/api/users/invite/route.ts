@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
     {
       data: {
         full_name,
-        role
+        role,
+        needs_password_setup: true  // Flag to indicate user needs to set password
       },
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback`
     }

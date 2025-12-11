@@ -47,11 +47,17 @@ export async function GET(request: NextRequest) {
       )
 
       // Exchange code for session
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+      const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
       if (exchangeError) {
         console.error('Error exchanging code for session:', exchangeError)
         return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_callback_error`)
+      }
+
+      // Check if this is a new user accepting an invite (needs password setup)
+      if (data.user && data.user.user_metadata?.needs_password_setup === true) {
+        // First time accepting invite - redirect to set password
+        return NextResponse.redirect(`${requestUrl.origin}/set-password`)
       }
     } catch (err) {
       console.error('Unexpected error in auth callback:', err)
