@@ -1,6 +1,36 @@
 # Story 1.7: User Management & Team Onboarding
 
-Status: Ready for Development
+Status: ✅ Completed (2025-12-11)
+
+## Completion Summary
+
+**Delivered:**
+- ✅ User invitation flow with PKCE authentication
+- ✅ Branded email template matching NovaCRM design system
+- ✅ Auth callback route with token_hash support (PKCE flow)
+- ✅ Password setup page for new users
+- ✅ Role-based Row Level Security (RLS) for contacts table
+- ✅ Auth user sync trigger and migration
+
+**Key Implementations:**
+- **Auth Callback Route** (`app/auth/callback/route.ts`): Handles both PKCE flow (token_hash) and OAuth flow (code) for invite links
+- **Invite API** (`app/api/users/invite/route.ts`): Admin endpoint to invite users with metadata
+- **Resend Invite API** (`app/api/users/[id]/resend-invite/route.ts`): Resend invitations to pending users
+- **Email Template** (`docs/supabase-invite-email-template.html`): Branded HTML email with proper button styling per UX specs
+- **RLS Migration** (`supabase/migrations/20251211_contacts_rls_role_based.sql`): Role-based access control for contacts
+- **User Sync Migrations**: `20251211025000_sync_auth_users.sql` and `20251211102426_user_management_sync.sql`
+
+**Security Enhancements:**
+- Admin users can see ALL contacts (including unassigned)
+- Non-admin users can ONLY see contacts where they are the owner
+- Unassigned contacts visible only to admins
+- Proper PKCE flow implementation for secure invite links
+
+**Fixed Issues:**
+- ✅ Invite links now redirect to password setup (not login page)
+- ✅ Token_hash properly exchanged for session via verifyOtp()
+- ✅ Contact access control enforced with RLS policies
+- ✅ Email template matches exact UX design specifications
 
 ## Story
 
