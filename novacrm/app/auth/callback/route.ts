@@ -54,20 +54,20 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_callback_error`)
       }
 
+      // Check if this is a password recovery flow (invited user setting password)
+      if (type === 'recovery') {
+        return NextResponse.redirect(`${requestUrl.origin}/update-password`)
+      }
+
       // Check if this is a new user accepting an invite (needs password setup)
       if (data.user && data.user.user_metadata?.needs_password_setup === true) {
         // First time accepting invite - redirect to set password
-        return NextResponse.redirect(`${requestUrl.origin}/set-password`)
+        return NextResponse.redirect(`${requestUrl.origin}/update-password`)
       }
     } catch (err) {
       console.error('Unexpected error in auth callback:', err)
       return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_callback_error`)
     }
-  }
-
-  // Check if this is a password recovery flow
-  if (type === 'recovery') {
-    return NextResponse.redirect(`${requestUrl.origin}/update-password`)
   }
 
   // Default: redirect to dashboard

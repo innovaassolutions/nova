@@ -35,28 +35,48 @@ export async function POST(request: NextRequest) {
 
   // 4. Create user via Supabase Admin API
   const adminClient = createAdminClient()
-  const { data: newUser, error: inviteError} = await adminClient.auth.admin.inviteUserByEmail(
-    email,
-    {
-      data: {
-        full_name,
-        role,
-        needs_password_setup: true  // Flag to indicate user needs to set password
-      },
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback`
-    }
-  )
 
-  if (inviteError) {
-    console.error('Invitation error:', inviteError)
+  // Create user with a temporary password and auto-confirm email
+  const tempPassword = Math.random().toString(36).slice(-12) + 'A1!' // Random temp password
+
+  const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+    email,
+    password: tempPassword,
+    email_confirm: true, // Auto-confirm so user can log in
+    user_metadata: {
+      full_name,
+      role,
+      needs_password_setup: true
+    }
+  })
+
+  if (createError || !newUser) {
+    console.error('User creation error:', createError)
     return NextResponse.json({
-      error: 'Failed to invite user',
-      details: inviteError.message
+      error: 'Failed to create user',
+      details: createError?.message || 'Unknown error'
     }, { status: 500 })
   }
 
   // 5. User is automatically created in public.users via trigger
   // Trigger: on_auth_user_created (from Story 1.7)
+
+  // 6. Send password reset email so they can set their own password
+  try {
+    const { error: resetError } = await adminClient.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?type=recovery`
+      }
+    )
+
+    if (resetError) {
+      console.error('Password reset email error:', resetError)
+      // User is created but email failed - they can request password reset manually
+    }
+  } catch (error) {
+    console.error('Failed to send password reset email:', error)
+  }
 
   return NextResponse.json({
     success: true,

@@ -56,6 +56,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../app/(auth)/set-password/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/set-password">> = Specific
+  const handler = {} as typeof import("../../app/(auth)/set-password/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../app/(auth)/update-password/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/update-password">> = Specific
@@ -249,6 +258,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/pipeline-stages">> = Specific
   const handler = {} as typeof import("../../app/api/pipeline-stages/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/users/[id]/resend-invite/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/users/[id]/resend-invite">> = Specific
+  const handler = {} as typeof import("../../app/api/users/[id]/resend-invite/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
