@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -33,7 +34,8 @@ export async function POST(request: NextRequest) {
   }
 
   // 4. Create user via Supabase Admin API
-  const { data: newUser, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+  const adminClient = createAdminClient()
+  const { data: newUser, error: inviteError} = await adminClient.auth.admin.inviteUserByEmail(
     email,
     {
       data: {

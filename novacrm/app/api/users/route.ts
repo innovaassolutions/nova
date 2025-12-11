@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -35,9 +36,10 @@ export async function GET() {
   }
 
   // Fetch auth details for each user using admin API
+  const adminClient = createAdminClient()
   const usersWithStatus = await Promise.all(
     publicUsers.map(async (user) => {
-      const { data: authData } = await supabase.auth.admin.getUserById(user.id)
+      const { data: authData } = await adminClient.auth.admin.getUserById(user.id)
 
       return {
         id: user.id,

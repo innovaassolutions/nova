@@ -90,6 +90,9 @@ export default function UserManagementTab() {
   const [users, setUsers] = useState<UserRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null)
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -153,6 +156,54 @@ export default function UserManagementTab() {
   const handleInviteSuccess = () => {
     setShowInviteModal(false)
     fetchUsers()
+  }
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return
+
+    try {
+      const response = await fetch(`/api/users/${selectedUser.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        alert(`Error: ${data.error}`)
+        return
+      }
+
+      setShowDeleteModal(false)
+      setSelectedUser(null)
+      fetchUsers()
+    } catch (error) {
+      alert('Failed to delete user')
+    }
+  }
+
+  const handleResetPassword = async (newPassword: string) => {
+    if (!selectedUser) return
+
+    try {
+      const response = await fetch(`/api/users/${selectedUser.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ new_password: newPassword }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        alert(`Error: ${data.error}`)
+        return
+      }
+
+      setShowResetPasswordModal(false)
+      setSelectedUser(null)
+      alert('Password reset successfully')
+    } catch (error) {
+      alert('Failed to reset password')
+    }
   }
 
   if (loading) {
@@ -238,6 +289,9 @@ export default function UserManagementTab() {
                 <th className="text-left py-3 px-4 text-sm font-600 text-mocha-subtext0">
                   Last Login
                 </th>
+                <th className="text-right py-3 px-4 text-sm font-600 text-mocha-subtext0">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -263,6 +317,30 @@ export default function UserManagementTab() {
                       {formatRelativeTime(user.last_sign_in_at)}
                     </div>
                   </td>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user)
+                          setShowResetPasswordModal(true)
+                        }}
+                        className="p-2 text-mocha-blue hover:bg-mocha-surface0 rounded-lg transition-colors"
+                        title="Reset Password"
+                      >
+                        <KeyIcon className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user)
+                          setShowDeleteModal(true)
+                        }}
+                        className="p-2 text-red-500 hover:bg-mocha-surface0 rounded-lg transition-colors"
+                        title="Delete User"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -276,6 +354,88 @@ export default function UserManagementTab() {
           onClose={() => setShowInviteModal(false)}
           onSuccess={handleInviteSuccess}
         />
+      )}
+
+      {/* Delete User Modal */}
+      {showDeleteModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-mocha-base border border-mocha-surface1 rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-800 text-mocha-text mb-4">Delete User</h3>
+            <p className="text-mocha-subtext0 mb-6">
+              Are you sure you want to delete <strong className="text-mocha-text">{selectedUser.name}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setSelectedUser(null)
+                }}
+                className="px-4 py-2 bg-mocha-surface0 text-mocha-text rounded-lg hover:bg-mocha-surface1 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Delete User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {showResetPasswordModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-mocha-base border border-mocha-surface1 rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-800 text-mocha-text mb-4">Reset Password</h3>
+            <p className="text-mocha-subtext0 mb-4">
+              Set a new password for <strong className="text-mocha-text">{selectedUser.name}</strong>
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const formData = new FormData(e.currentTarget)
+                const password = formData.get('password') as string
+                handleResetPassword(password)
+              }}
+            >
+              <div className="mb-6">
+                <label htmlFor="password" className="block text-sm font-600 text-mocha-subtext0 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  required
+                  minLength={8}
+                  className="w-full px-3 py-2 bg-mocha-surface0 border border-mocha-surface1 rounded-lg text-mocha-text focus:outline-none focus:ring-2 focus:ring-innovaas-orange"
+                  placeholder="Minimum 8 characters"
+                />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowResetPasswordModal(false)
+                    setSelectedUser(null)
+                  }}
+                  className="px-4 py-2 bg-mocha-surface0 text-mocha-text rounded-lg hover:bg-mocha-surface1 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-innovaas-orange text-white rounded-lg hover:bg-innovaas-orange-soft transition-colors"
+                >
+                  Reset Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   )
