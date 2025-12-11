@@ -31,12 +31,23 @@ export async function DELETE(
     return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })
   }
 
-  // Delete from auth.users (will cascade to public.users via trigger)
-  const adminClient = createAdminClient()
-  const { error: deleteError } = await adminClient.auth.admin.deleteUser(id)
+  // Delete from public.users first
+  const { error: publicDeleteError } = await supabase
+    .from('users')
+    .delete()
+    .eq('id', id)
 
-  if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 })
+  if (publicDeleteError) {
+    return NextResponse.json({ error: publicDeleteError.message }, { status: 500 })
+  }
+
+  // Then delete from auth.users
+  const adminClient = createAdminClient()
+  const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(id)
+
+  if (authDeleteError) {
+    // User deleted from public.users but failed in auth - log but don't fail
+    console.error('Failed to delete from auth.users:', authDeleteError)
   }
 
   return NextResponse.json({ success: true })
