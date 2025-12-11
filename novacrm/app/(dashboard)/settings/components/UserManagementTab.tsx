@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import {
   UserGroupIcon,
   CheckCircleIcon,
   ClockIcon,
   PlusIcon,
+  EllipsisVerticalIcon,
+  TrashIcon,
+  KeyIcon,
 } from '@heroicons/react/24/outline'
 import InviteUserModal from './InviteUserModal'
 
@@ -93,60 +95,39 @@ export default function UserManagementTab() {
     active: 0,
     pending: 0,
   })
-  const supabase = createClient()
 
   const fetchUsers = async () => {
     setLoading(true)
 
-    // Fetch users with auth status
-    const { data: publicUsers, error: publicError } = await supabase
-      .from('users')
-      .select('*')
-      .order('created_at', { ascending: false })
+    try {
+      const response = await fetch('/api/users')
+      const data = await response.json()
 
-    if (publicError) {
-      console.error('Error fetching users:', publicError)
-      setLoading(false)
-      return
-    }
+      if (!response.ok) {
+        console.error('Error fetching users:', data.error)
+        setLoading(false)
+        return
+      }
 
-    if (!publicUsers || publicUsers.length === 0) {
-      setUsers([])
-      setStats({ total: 0, active: 0, pending: 0 })
-      setLoading(false)
-      return
-    }
+      const usersWithStatus = data.users as UserRecord[]
 
-    // Fetch auth details for each user
-    const usersWithStatus = await Promise.all(
-      publicUsers.map(async (user) => {
-        const { data: authData } = await supabase.auth.admin.getUserById(user.id)
+      setUsers(usersWithStatus)
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role as 'admin' | 'sales_rep' | 'executive',
-          status: authData?.user?.email_confirmed_at ? 'active' : 'pending',
-          created_at: user.created_at,
-          last_sign_in_at: authData?.user?.last_sign_in_at || null,
-        } as UserRecord
+      // Calculate stats
+      const activeCount = usersWithStatus.filter(u => u.status === 'active').length
+      const pendingCount = usersWithStatus.filter(u => u.status === 'pending').length
+
+      setStats({
+        total: usersWithStatus.length,
+        active: activeCount,
+        pending: pendingCount,
       })
-    )
 
-    setUsers(usersWithStatus)
-
-    // Calculate stats
-    const activeCount = usersWithStatus.filter(u => u.status === 'active').length
-    const pendingCount = usersWithStatus.filter(u => u.status === 'pending').length
-
-    setStats({
-      total: usersWithStatus.length,
-      active: activeCount,
-      pending: pendingCount,
-    })
-
-    setLoading(false)
+      setLoading(false)
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
