@@ -44,7 +44,7 @@ export async function POST(
     const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
       userData.email,
       {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/update-password`
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
       }
     )
 

@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         role,
         needs_password_setup: true
       },
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/update-password`
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
     }
   )
 
