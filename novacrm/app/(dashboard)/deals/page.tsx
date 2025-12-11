@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import DealCard from './components/DealCard';
 import DealDetailModal from '../components/DealDetailModal';
-import { useToast } from '../contacts/components/ToastContext';
+import { useToast } from '../components/ToastContext';
 
 interface Deal {
   id: string;

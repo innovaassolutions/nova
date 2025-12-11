@@ -15,7 +15,7 @@ import {
   TrashIcon,
   CheckIcon,
 } from '@heroicons/react/24/outline';
-import { useToast } from '../contacts/components/ToastContext';
+import { useToast } from './ToastContext';
 
 interface Deal {
   id: string;
