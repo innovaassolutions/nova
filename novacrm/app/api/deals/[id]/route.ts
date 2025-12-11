@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server'
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -22,7 +22,7 @@ export async function GET(
       )
     }
 
-    const dealId = params.id
+    const { id: dealId } = await params
 
     // Fetch deal with joined data
     const { data: deal, error: dealError } = await supabase
@@ -79,7 +79,7 @@ export async function GET(
  */
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -94,7 +94,7 @@ export async function PUT(
       )
     }
 
-    const dealId = params.id
+    const { id: dealId } = await params
     const body = await request.json()
 
     const {
@@ -242,7 +242,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -257,7 +257,7 @@ export async function DELETE(
       )
     }
 
-    const dealId = params.id
+    const { id: dealId } = await params
 
     // Delete deal (CASCADE will delete deal_stage_history automatically)
     const { error: deleteError } = await supabase
