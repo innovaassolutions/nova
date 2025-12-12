@@ -60,7 +60,7 @@ development_status:
 
   # Epic 6: Dashboard & Pipeline Analytics (5 stories)
   epic-6: in-progress
-  6-1-dashboard-page-four-key-stat-cards: in-progress
+  6-1-dashboard-page-four-key-stat-cards: review
   6-2-pipeline-funnel-visualization-stage: ready-for-dev
   6-3-deals-at-risk-identification-list: backlog
   6-4-dashboard-filters-date-range-owner-campaign: backlog
