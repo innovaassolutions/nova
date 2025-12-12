@@ -58,19 +58,20 @@ development_status:
   5-1-companies-database-table-data-migration: done
   5-2-company-list-page-crud-operations: done
 
-  # Epic 6: Dashboard & Pipeline Analytics (5 stories) - RENUMBERED
-  5-1-dashboard-page-four-key-stat-cards: backlog
-  5-2-pipeline-funnel-visualization-stage: backlog
-  5-3-deals-at-risk-identification-list: backlog
-  5-4-dashboard-filters-date-range-owner-campaign: backlog
-  5-5-executive-readonly-dashboard-view: backlog
-  epic-5-retrospective: optional
-
-  # Epic 6: Activity Tracking & Email Integration (5 stories)
-  epic-6: backlog
-  6-1-activities-database-table-activity-types: backlog
-  6-2-log-activity-modal-activity-type-selection: backlog
-  6-3-activity-timeline-component-contacts-deals: backlog
-  6-4-outlook-email-integration-click-to-email: backlog
-  6-5-activity-summary-recent-activity-dashboard-widget: backlog
+  # Epic 6: Dashboard & Pipeline Analytics (5 stories)
+  epic-6: in-progress
+  6-1-dashboard-page-four-key-stat-cards: in-progress
+  6-2-pipeline-funnel-visualization-stage: ready-for-dev
+  6-3-deals-at-risk-identification-list: backlog
+  6-4-dashboard-filters-date-range-owner-campaign: backlog
+  6-5-executive-readonly-dashboard-view: backlog
   epic-6-retrospective: optional
+
+  # Epic 7: Activity Tracking & Email Integration (5 stories)
+  epic-7: backlog
+  7-1-activities-database-table-activity-types: backlog
+  7-2-log-activity-modal-activity-type-selection: backlog
+  7-3-activity-timeline-component-contacts-deals: backlog
+  7-4-outlook-email-integration-click-to-email: backlog
+  7-5-activity-summary-recent-activity-dashboard-widget: backlog
+  epic-7-retrospective: optional
