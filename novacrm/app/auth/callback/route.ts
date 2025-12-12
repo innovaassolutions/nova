@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Create response object to collect cookies
+  let response = NextResponse.next({ request })
   const cookieStore = await cookies()
 
   const supabase = createServerClient(
@@ -39,6 +41,7 @@ export async function GET(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             cookieStore.set(name, value, options)
+            response.cookies.set(name, value, options)
           })
         },
       },
@@ -60,16 +63,19 @@ export async function GET(request: NextRequest) {
 
       // Check if this is a password recovery flow
       if (type === 'recovery') {
-        return NextResponse.redirect(`${requestUrl.origin}/update-password`)
+        response = NextResponse.redirect(`${requestUrl.origin}/update-password`)
+        return response
       }
 
       // Check if this is an invite acceptance
       if (type === 'invite' || (data.user && data.user.user_metadata?.needs_password_setup === true)) {
-        return NextResponse.redirect(`${requestUrl.origin}/update-password`)
+        response = NextResponse.redirect(`${requestUrl.origin}/update-password`)
+        return response
       }
 
       // Default after successful OTP verification
-      return NextResponse.redirect(`${requestUrl.origin}/dashboard`)
+      response = NextResponse.redirect(`${requestUrl.origin}/dashboard`)
+      return response
     } catch (err) {
       console.error('Unexpected error verifying OTP:', err)
       return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_callback_error`)
@@ -89,14 +95,20 @@ export async function GET(request: NextRequest) {
 
       // Check if this is a password recovery flow
       if (type === 'recovery') {
-        return NextResponse.redirect(`${requestUrl.origin}/update-password`)
+        response = NextResponse.redirect(`${requestUrl.origin}/update-password`)
+        return response
       }
 
       // Check if this is an invite acceptance (user confirming their email from invite)
       if (type === 'invite' || (data.user && data.user.user_metadata?.needs_password_setup === true)) {
         // Invited user confirmed email - redirect to password setup
-        return NextResponse.redirect(`${requestUrl.origin}/update-password`)
+        response = NextResponse.redirect(`${requestUrl.origin}/update-password`)
+        return response
       }
+
+      // Default after successful code exchange
+      response = NextResponse.redirect(`${requestUrl.origin}/dashboard`)
+      return response
     } catch (err) {
       console.error('Unexpected error in auth callback:', err)
       return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_callback_error`)
@@ -104,5 +116,6 @@ export async function GET(request: NextRequest) {
   }
 
   // Default: redirect to dashboard
-  return NextResponse.redirect(`${requestUrl.origin}/dashboard`)
+  response = NextResponse.redirect(`${requestUrl.origin}/dashboard`)
+  return response
 }
