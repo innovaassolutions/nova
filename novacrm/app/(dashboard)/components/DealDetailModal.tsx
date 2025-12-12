@@ -41,7 +41,7 @@ interface Deal {
   };
   owner: {
     id: string;
-    full_name: string;
+    name: string;
   } | null;
 }
 
@@ -51,7 +51,7 @@ interface StageHistoryEntry {
   notes: string | null;
   from_stage: { name: string } | null;
   to_stage: { name: string } | null;
-  changed_by_user: { full_name: string } | null;
+  changed_by_user: { name: string } | null;
 }
 
 interface PipelineStage {
@@ -560,7 +560,7 @@ export default function DealDetailModal({
                     {/* Owner */}
                     <div>
                       <label className="block mb-1 text-sm font-semibold text-[#a6adc8]">Owner</label>
-                      <p className="text-base text-[#cdd6f4]">{deal.owner?.full_name || 'N/A'}</p>
+                      <p className="text-base text-[#cdd6f4]">{deal.owner?.name || 'N/A'}</p>
                     </div>
 
                     {/* Created */}
@@ -625,7 +625,7 @@ export default function DealDetailModal({
                                 Moved to {entry.to_stage?.name || 'Unknown'}
                               </p>
                               <p className="text-xs text-[#a6adc8]">
-                                {formatDateTime(entry.changed_at)} by {entry.changed_by_user?.full_name || 'Unknown'}
+                                {formatDateTime(entry.changed_at)} by {entry.changed_by_user?.name || 'Unknown'}
                               </p>
                               {entry.notes && (
                                 <p className="mt-1 text-xs text-[#6c7086] italic">{entry.notes}</p>

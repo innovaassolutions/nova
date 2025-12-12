@@ -31,7 +31,7 @@ export async function GET(
         *,
         contact:contacts(id, first_name, last_name, company),
         stage:pipeline_stages(id, name, order_num),
-        owner:users(id, email, full_name)
+        owner:users(id, email, name)
       `)
       .eq('id', dealId)
       .single()
@@ -50,7 +50,7 @@ export async function GET(
         *,
         from_stage:pipeline_stages!from_stage_id(name),
         to_stage:pipeline_stages!to_stage_id(name),
-        changed_by_user:users(full_name)
+        changed_by_user:users(name)
       `)
       .eq('deal_id', dealId)
       .order('changed_at', { ascending: false })

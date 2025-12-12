@@ -38,7 +38,7 @@ export async function GET(request: Request) {
         *,
         contact:contacts(id, first_name, last_name, company),
         stage:pipeline_stages(id, name, order_num),
-        owner:users(id, full_name)
+        owner:users(id, name)
       `, { count: 'exact' })
 
     // Apply filters
