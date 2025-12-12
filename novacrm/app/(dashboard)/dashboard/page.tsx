@@ -26,27 +26,81 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  // AC1, AC9: Fetch dashboard stats from API using server-side fetch
+  // AC1, AC9: Fetch dashboard stats directly from database
   let statsData = null
   let error = null
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/dashboard/stats`, {
-      // Use server-side fetch with cookies
-      headers: {
-        Cookie: `sb-access-token=${(await supabase.auth.getSession()).data.session?.access_token}`,
-      },
-      cache: 'no-store', // Always fetch fresh data
-    })
+    // Fetch all deals with single optimized query (uses idx_deals_status)
+    const { data: deals, error: dealsError } = await supabase
+      .from('deals')
+      .select('value, probability, status, expected_close_date, closed_at')
+      .in('status', ['Open', 'Won', 'Lost'])
 
-    if (response.ok) {
-      statsData = await response.json()
-    } else {
+    if (dealsError) {
+      console.error('Error fetching deals for dashboard stats:', dealsError)
       error = 'Failed to load dashboard statistics'
+    } else {
+      // Calculate metrics (same logic as API endpoint)
+      const openDeals = deals.filter((d) => d.status === 'Open')
+      const totalPipelineValue = openDeals.reduce((sum, d) => sum + (d.value || 0), 0)
+
+      const weightedPipelineValue = openDeals.reduce(
+        (sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100),
+        0
+      )
+
+      const dealsWithProbability = openDeals.filter(
+        (d) => d.probability !== null && d.probability !== undefined
+      )
+      const averageProbability =
+        dealsWithProbability.length > 0
+          ? dealsWithProbability.reduce((sum, d) => sum + d.probability!, 0) /
+            dealsWithProbability.length
+          : 0
+
+      const openDealsCount = openDeals.length
+
+      // Calculate closing soon (within 7 days)
+      const today = new Date()
+      const sevenDaysFromNow = new Date()
+      sevenDaysFromNow.setDate(today.getDate() + 7)
+
+      const closingSoonCount = openDeals.filter((deal) => {
+        if (!deal.expected_close_date) return false
+        const closeDate = new Date(deal.expected_close_date)
+        return closeDate >= today && closeDate <= sevenDaysFromNow
+      }).length
+
+      // Calculate win rate (last 30 days)
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+      const recentlyClosedDeals = deals.filter((d) => {
+        if (!d.closed_at) return false
+        const closedDate = new Date(d.closed_at)
+        return closedDate >= thirtyDaysAgo && (d.status === 'Won' || d.status === 'Lost')
+      })
+
+      const wonCount = recentlyClosedDeals.filter((d) => d.status === 'Won').length
+      const lostCount = recentlyClosedDeals.filter((d) => d.status === 'Lost').length
+      const totalClosed = wonCount + lostCount
+      const winRate = totalClosed > 0 ? (wonCount / totalClosed) * 100 : 0
+
+      statsData = {
+        total_pipeline_value: totalPipelineValue,
+        total_pipeline_trend: '↑ 12%', // Placeholder
+        weighted_pipeline_value: weightedPipelineValue,
+        average_probability: averageProbability,
+        open_deals_count: openDealsCount,
+        closing_soon_count: closingSoonCount,
+        win_rate: winRate,
+        won_count: wonCount,
+        lost_count: lostCount,
+      }
     }
   } catch (err) {
-    console.error('Error fetching dashboard stats:', err)
+    console.error('Error calculating dashboard stats:', err)
     error = 'An error occurred while loading dashboard statistics'
   }
 
