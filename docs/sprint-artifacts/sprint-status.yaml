@@ -40,7 +40,7 @@ development_status:
   3-1-csv-parser-linkedin-connections-export: done
   3-2-csv-upload-page-multistep-flow: done
   3-3-duplicate-detection-resolution-modal: done
-  3-4-batch-import-api-transaction-handling: review
+  3-4-batch-import-api-transaction-handling: done
   3-5-campaign-crud-interface-admin-settings: ready-for-dev
   epic-3-retrospective: optional
 
