@@ -60,6 +60,13 @@ interface ContactDetailModalProps {
   onContactDeleted: () => void;
 }
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export default function ContactDetailModal({
   contactId,
   isOpen,
@@ -69,6 +76,7 @@ export default function ContactDetailModal({
 }: ContactDetailModalProps) {
   const [contact, setContact] = useState<Contact | null>(null);
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -85,6 +93,7 @@ export default function ContactDetailModal({
   useEffect(() => {
     if (isOpen && contactId) {
       fetchContact();
+      fetchUsers();
     }
   }, [isOpen, contactId]);
 
@@ -121,6 +130,18 @@ export default function ContactDetailModal({
       }
     } catch (err) {
       console.error('Error fetching deals:', err);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/users');
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err);
     }
   };
 
@@ -333,7 +354,14 @@ export default function ContactDetailModal({
                         <InfoRow label="Position" value={contact.position || '—'} />
                         <InfoRow label="Connected On" value={contact.connected_on ? formatDate(contact.connected_on) : '—'} />
                         <InfoRow label="Source" value={contact.source} />
-                        <InfoRow label="Owner" value={contact.owner_id ? 'Assigned' : 'Unassigned'} />
+                        <InfoRow
+                          label="Owner"
+                          value={
+                            contact.owner_id
+                              ? users.find(u => u.id === contact.owner_id)?.name || 'Assigned'
+                              : 'Unassigned'
+                          }
+                        />
                         <div>
                           <p className="mb-2 text-sm font-semibold text-[#a6adc8]">Campaigns</p>
                           <CampaignBadges campaigns={contact.campaigns} />
@@ -357,6 +385,21 @@ export default function ContactDetailModal({
                           value={editData.email || ''}
                           onChange={(e) => setEditData({ ...editData, email: e.target.value })}
                         />
+                        <div>
+                          <label className="block text-sm font-semibold text-[#a6adc8]">Assign to</label>
+                          <select
+                            value={editData.owner_id || ''}
+                            onChange={(e) => setEditData({ ...editData, owner_id: e.target.value || null })}
+                            className="mt-1 w-full rounded-lg border border-[#313244] bg-[#1e1e2e] px-3 py-2 text-sm text-[#cdd6f4] focus:border-[#F25C05] focus:outline-none focus:ring-1 focus:ring-[#F25C05]"
+                          >
+                            <option value="">Unassigned</option>
+                            {users.map((user) => (
+                              <option key={user.id} value={user.id}>
+                                {user.name} ({user.role})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     )}
 
