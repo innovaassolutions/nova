@@ -36,12 +36,12 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Bulk Contact Import & Campaign Management (5 stories)
-  epic-3: in-progress
+  epic-3: done
   3-1-csv-parser-linkedin-connections-export: done
   3-2-csv-upload-page-multistep-flow: done
   3-3-duplicate-detection-resolution-modal: done
   3-4-batch-import-api-transaction-handling: done
-  3-5-campaign-crud-interface-admin-settings: in-progress
+  3-5-campaign-crud-interface-admin-settings: done
   epic-3-retrospective: optional
 
   # Epic 4: Deal Pipeline & Stage Tracking (5 stories)
