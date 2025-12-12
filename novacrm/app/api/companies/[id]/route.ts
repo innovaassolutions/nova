@@ -24,7 +24,7 @@ interface CompanyRequest {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient();
 
@@ -39,7 +39,7 @@ export async function GET(
   }
 
   try {
-    const companyId = params.id;
+    const { id: companyId } = await params;
 
     // Fetch company
     const { data: company, error: companyError } = await supabase
@@ -96,7 +96,7 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient();
 
@@ -111,7 +111,7 @@ export async function PUT(
   }
 
   try {
-    const companyId = params.id;
+    const { id: companyId } = await params;
     const body: CompanyRequest = await request.json();
 
     // Validate required fields
@@ -227,7 +227,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient();
 
@@ -242,7 +242,7 @@ export async function DELETE(
   }
 
   try {
-    const companyId = params.id;
+    const { id: companyId } = await params;
 
     // Check if company exists
     const { data: company } = await supabase
