@@ -40,8 +40,8 @@ development_status:
   3-1-csv-parser-linkedin-connections-export: done
   3-2-csv-upload-page-multistep-flow: done
   3-3-duplicate-detection-resolution-modal: done
-  3-4-batch-import-api-transaction-handling: backlog
-  3-5-campaign-crud-interface-admin-settings: backlog
+  3-4-batch-import-api-transaction-handling: ready-for-dev
+  3-5-campaign-crud-interface-admin-settings: ready-for-dev
   epic-3-retrospective: optional
 
   # Epic 4: Deal Pipeline & Stage Tracking (5 stories)
