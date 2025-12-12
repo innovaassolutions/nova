@@ -29,7 +29,7 @@ export async function GET(
       .from('deals')
       .select(`
         *,
-        contact:contacts(id, first_name, last_name, company),
+        contact:contacts(id, first_name, last_name, company_id, companies(name)),
         stage:pipeline_stages(id, name, order_num),
         owner:users(id, email, name)
       `)

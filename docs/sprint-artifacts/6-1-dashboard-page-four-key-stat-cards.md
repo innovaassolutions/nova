@@ -661,9 +661,34 @@ N/A - Story creation phase
 - ✅ novacrm/lib/utils/format.ts (created)
 - ✅ novacrm/app/api/dashboard/stats/route.ts (created)
 - ✅ novacrm/app/components/dashboard/SkeletonCard.tsx (created)
-- ✅ novacrm/app/components/dashboard/StatCard.tsx (created)
-- ✅ novacrm/app/components/dashboard/DashboardStats.tsx (created)
+- ✅ novacrm/app/components/dashboard/StatCard.tsx (created, redesigned with chart support)
+- ✅ novacrm/app/components/dashboard/DashboardStats.tsx (created, redesigned with visualizations)
 - ✅ novacrm/app/(dashboard)/dashboard/page.tsx (modified)
+
+**Redesign Complete (2025-12-13) - Visual Charts Added:**
+- ✅ Installed Recharts library for data visualization (npm install recharts)
+- ✅ Added optional `chart` prop to StatCard component to accept ReactNode visualizations
+- ✅ Card 1 (Total Pipeline Value): Added horizontal progress bar showing $650k vs $1M goal
+  - Shows visual context of where current value lies relative to goal
+  - Orange fill (#F25C05) for current value, dark gray (#313244) for remaining
+  - 60px height bar chart with rounded corners
+- ✅ Card 2 (Weighted Value): Added comparison bar chart (weighted vs total)
+  - Visual comparison of $405k weighted vs $650k total pipeline value
+  - Orange (#F25C05) for weighted, blue (#89b4fa) for total
+  - 80px height bar chart showing relative sizes
+- ✅ Card 3 (Open Deals): Added donut chart for deals breakdown
+  - Visual distribution: 3 closing soon (orange) vs 15 other open (teal)
+  - 100px height donut chart with 25px inner radius, 40px outer radius
+  - 2px padding between segments
+- ✅ Card 4 (Win Rate): Added radial progress gauge
+  - Visual representation of 45% win rate as circular progress indicator
+  - Color-coded: Green (≥50%), Orange (30-49%), Red (<30%)
+  - 100px height radial bar chart, 90° to -270° arc
+  - Dark gray (#313244) background ring showing full 100% scale
+- ✅ All charts use Catppuccin Mocha color palette for consistency
+- ✅ Charts are mobile-responsive via ResponsiveContainer
+- ✅ No hover dependencies - all visualizations visible by default
+- ✅ Charts provide visual context showing "where values lie" per user feedback
 
 ### File List
 

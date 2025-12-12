@@ -2,11 +2,12 @@
 
 /**
  * StatCard Component
- * Story 6.1: Dashboard Page with Four Key Stat Cards
+ * Story 6.1: Dashboard Page with Four Key Stat Cards (Redesigned with Charts)
  * AC4, AC5, AC6, AC7, AC8: Stat Card specifications and hover interactions
  *
  * Reusable component for displaying dashboard statistics
- * Features Catppuccin Mocha theme with hover effects
+ * Features Catppuccin Mocha theme with embedded visualizations
+ * Mobile-first design with touch-friendly interactions
  */
 
 import { ReactNode } from 'react'
@@ -20,6 +21,7 @@ interface StatCardProps {
   trend?: string
   trendUp?: boolean
   valueColor?: string
+  chart?: ReactNode // Optional chart visualization
 }
 
 export default function StatCard({
@@ -31,6 +33,7 @@ export default function StatCard({
   trend,
   trendUp,
   valueColor = '#cdd6f4', // Mocha Text default
+  chart,
 }: StatCardProps) {
   return (
     <div
@@ -71,8 +74,11 @@ export default function StatCard({
         </div>
       )}
 
+      {/* Chart visualization (if provided) */}
+      {chart && <div className="mt-4">{chart}</div>}
+
       {/* Subtext */}
-      {subtext && <p className="text-sm text-[#a6adc8]">{subtext}</p>}
+      {subtext && <p className="mt-2 text-sm text-[#a6adc8]">{subtext}</p>}
     </div>
   )
 }

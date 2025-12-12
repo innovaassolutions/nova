@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       .from('deals')
       .select(`
         *,
-        contact:contacts(id, first_name, last_name, company),
+        contact:contacts(id, first_name, last_name, company_id, companies(name)),
         stage:pipeline_stages(id, name, order_num),
         owner:users(id, name)
       `, { count: 'exact' })
@@ -62,9 +62,9 @@ export async function GET(request: Request) {
       query = query.eq('contact_id', contactId)
     }
 
-    // Apply search
+    // Apply search (search on title and contact name - company search requires nested query)
     if (search) {
-      query = query.or(`title.ilike.%${search}%,contact.first_name.ilike.%${search}%,contact.last_name.ilike.%${search}%,contact.company.ilike.%${search}%`)
+      query = query.or(`title.ilike.%${search}%,contact.first_name.ilike.%${search}%,contact.last_name.ilike.%${search}%`)
     }
 
     // Apply sorting
