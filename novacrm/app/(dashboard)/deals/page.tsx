@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import DealCard from './components/DealCard';
 import DealDetailModal from '../components/DealDetailModal';
+import MetricCard from '../components/MetricCard';
 import { useToast } from '../components/ToastContext';
 
 interface Deal {
@@ -57,6 +58,18 @@ export default function DealsPage() {
   const [showDealDetailModal, setShowDealDetailModal] = useState(false);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
 
+  // Metrics state (AC1)
+  const [metrics, setMetrics] = useState({
+    total_pipeline_value: 0,
+    weighted_pipeline_value: 0,
+    average_probability: 0,
+    open_deals_count: 0,
+    closing_soon_count: 0,
+    average_deal_value: 0,
+    median_deal_value: 0,
+  });
+  const [metricsLoading, setMetricsLoading] = useState(true);
+
   // Fetch stages
   useEffect(() => {
     fetchStages();
@@ -66,6 +79,7 @@ export default function DealsPage() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchDeals();
+      fetchMetrics(); // AC6: Metrics update with filters
     }, searchQuery ? 300 : 0);
 
     return () => clearTimeout(timeoutId);
@@ -127,6 +141,43 @@ export default function DealsPage() {
     }
   };
 
+  // AC8: Fetch metrics from API
+  const fetchMetrics = async () => {
+    try {
+      setMetricsLoading(true);
+
+      // Build query parameters matching current filters (AC6)
+      const params = new URLSearchParams();
+
+      if (activeTab !== 'all' && activeTab !== 'won' && activeTab !== 'lost') {
+        // Specific stage selected
+        params.append('stage_id', activeTab);
+        params.append('status', 'Open');
+      } else if (activeTab === 'won') {
+        params.append('status', 'Won');
+      } else if (activeTab === 'lost') {
+        params.append('status', 'Lost');
+      } else {
+        // All - show only open deals (default)
+        params.append('status', 'Open');
+      }
+
+      const response = await fetch(`/api/deals/metrics?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch metrics');
+      }
+
+      const data = await response.json();
+      setMetrics(data);
+    } catch (error) {
+      console.error('Error fetching metrics:', error);
+      // Don't show toast for metrics errors to avoid spamming user
+    } finally {
+      setMetricsLoading(false);
+    }
+  };
+
   const handleViewDeal = (dealId: string) => {
     setSelectedDealId(dealId);
     setShowDealDetailModal(true);
@@ -178,6 +229,61 @@ export default function DealsPage() {
             New Deal
           </button>
         </div>
+      </div>
+
+      {/* Metrics Cards (AC1) */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {metricsLoading ? (
+          // Loading skeleton
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="animate-pulse bg-[#181825] border border-[#313244] rounded-xl p-6 h-32"
+              >
+                <div className="h-4 bg-[#313244] rounded w-3/4 mb-3"></div>
+                <div className="h-8 bg-[#313244] rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-[#313244] rounded w-2/3"></div>
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            {/* AC2: Total Pipeline Value */}
+            <MetricCard
+              label="Total Pipeline Value"
+              value={metrics.total_pipeline_value}
+              subtext={`${metrics.open_deals_count} open deals`}
+            />
+
+            {/* AC3: Weighted Pipeline Value */}
+            <MetricCard
+              label="Weighted Value (Probability-Adjusted)"
+              value={metrics.weighted_pipeline_value}
+              valueColor="text-[#F25C05]"
+              subtext={`${metrics.average_probability.toFixed(1)}% avg probability`}
+            />
+
+            {/* AC4: Open Deals Count */}
+            <MetricCard
+              label="Open Deals"
+              value={metrics.open_deals_count.toString()}
+              subtext={
+                metrics.closing_soon_count > 0
+                  ? `${metrics.closing_soon_count} closing soon`
+                  : 'None closing soon'
+              }
+              subtextColor={metrics.closing_soon_count > 0 ? 'text-[#F25C05]' : 'text-[#6c7086]'}
+            />
+
+            {/* AC5: Average Deal Value */}
+            <MetricCard
+              label="Avg Deal Value"
+              value={metrics.average_deal_value}
+              subtext={`$${metrics.median_deal_value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} median`}
+            />
+          </>
+        )}
       </div>
 
       {/* Stage Tabs */}

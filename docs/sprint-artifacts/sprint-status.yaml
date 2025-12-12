@@ -50,7 +50,7 @@ development_status:
   4-2-create-deal-form-contact-linking: review
   4-3-deal-detail-view-edit-modal: review
   4-4-deal-list-view-pipeline-stage-filtering: review
-  4-5-pipeline-value-calculation-deal-metrics: ready-for-dev
+  4-5-pipeline-value-calculation-deal-metrics: review
   epic-4-retrospective: optional
 
   # Epic 5: Dashboard & Pipeline Analytics (5 stories)
