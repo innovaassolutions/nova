@@ -115,8 +115,8 @@ This document provides the complete epic and story breakdown for NovaCRM, decomp
 
 ## Epic Structure Overview
 
-**Total Epics:** 6 user-value focused epics
-**Dependency Flow:** Epic 1 → Epic 2 → [Epic 3, Epic 4] → Epic 5 → Epic 6
+**Total Epics:** 7 user-value focused epics
+**Dependency Flow:** Epic 1 → Epic 2 → [Epic 3, Epic 4] → Epic 5 → [Epic 6, Epic 7]
 
 ### Epic Progression
 
@@ -124,8 +124,9 @@ This document provides the complete epic and story breakdown for NovaCRM, decomp
 2. **Epic 2: Contact Management & LinkedIn Capture** - Team can capture and manage LinkedIn connections
 3. **Epic 3: Bulk Contact Import & Campaign Management** - Team can import contacts in bulk and manage campaigns
 4. **Epic 4: Deal Pipeline & Stage Tracking** - Team can track deals through pipeline stages with values and probabilities
-5. **Epic 5: Dashboard & Pipeline Analytics** - Team and executives can see real-time pipeline health and metrics
-6. **Epic 6: Activity Tracking & Email Integration** - Team can log all relationship interactions with Outlook integration
+5. **Epic 5: Company Management & Organization** - Team can organize contacts by company with company-level metrics and relationships
+6. **Epic 6: Dashboard & Pipeline Analytics** - Team and executives can see real-time pipeline health and metrics
+7. **Epic 7: Activity Tracking & Email Integration** - Team can log all relationship interactions with Outlook integration
 
 ### Epic Technical Context Summary
 
@@ -137,9 +138,11 @@ This document provides the complete epic and story breakdown for NovaCRM, decomp
 
 **Epic 4** leverages: Deals table with value/probability/stage, pipeline_stages with 8 hard-coded MVP stages, foreign key to contacts, weighted pipeline calculations, deal detail UX with stage badges
 
-**Epic 5** leverages: Dashboard aggregation queries with indexes, real-time pipeline value calculation, dashboard API endpoint, 4-column stat card grid UX, responsive breakpoints, filter components
+**Epic 5** leverages: Companies table with foreign keys, contact-company migration, company CRUD API routes, company detail modal with aggregated metrics, searchable company selector in contact forms, company avatars with gradient backgrounds
 
-**Epic 6** leverages: Activities table with contact/deal references, activity types (Email, LinkedIn, WhatsApp, Call, Meeting), timeline queries, mailto: links for Outlook, activity logging modal UX
+**Epic 6** leverages: Dashboard aggregation queries with indexes, real-time pipeline value calculation, dashboard API endpoint, 4-column stat card grid UX, responsive breakpoints, filter components
+
+**Epic 7** leverages: Activities table with contact/deal references, activity types (Email, LinkedIn, WhatsApp, Call, Meeting), timeline queries, mailto: links for Outlook, activity logging modal UX
 
 ---
 
@@ -2427,7 +2430,393 @@ Ready for checkpoint validation.
 
 ---
 
-## Epic 5: Dashboard & Pipeline Analytics
+## Epic 5: Company Management & Organization
+
+**Epic Goal:** Enable INNOVAAS sales team to organize contacts by company, track company-level metrics, and manage organizational relationships as first-class entities in the CRM with proper relational integrity.
+
+**User Value:** After this epic, sales team members can group contacts by their companies, view company-level metrics (total deal value, contact count), understand relationships at the organizational level rather than just individual contacts, and maintain data integrity through proper database relationships.
+
+**PRD Coverage:** FR-COMP.1-8 (Company Management - NEW functional requirements addressing architectural gap)
+**Architecture Integration:** New companies table, foreign key relationships, contact-company migration, company aggregation queries, RESTful API endpoints
+**UX Patterns:** Company list with search/filter, company detail modal with linked contacts/deals, company avatars, metrics cards, searchable company selector in contact forms
+
+---
+
+### Story 5.1: Companies Database Table & Data Migration
+
+**User Story:**
+As a system architect, I want to create the companies database table and migrate existing contact company data, so that companies are first-class entities with relational integrity and existing data is preserved.
+
+**Acceptance Criteria:**
+
+**Given** the current database has contacts with `company` text field
+**When** I apply the companies migration
+**Then** a new `companies` table is created with proper schema
+
+**And** the `companies` table has columns:
+- `id UUID` (primary key, auto-generated)
+- `name TEXT UNIQUE NOT NULL` (company name, unique constraint)
+- `industry TEXT` (nullable, for categorization)
+- `size TEXT` (nullable, values: 'Startup', 'SMB', 'Enterprise')
+- `website TEXT` (nullable, company website URL)
+- `notes TEXT` (nullable, rich text notes)
+- `created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`
+- `updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()`
+
+**And** the migration parses all existing `contacts.company` text values
+**And** creates unique company records (deduplicated by name, case-insensitive)
+**And** 9 unique companies are identified from current contact data
+**And** each company record is inserted into `companies` table
+
+**And** the `contacts` table is modified:
+- Add `company_id UUID REFERENCES companies(id) ON DELETE SET NULL`
+- Map each contact to matching company by name
+- Verify all contacts successfully linked to companies
+- Drop old `company TEXT` column
+
+**And** performance indexes are created:
+- `CREATE INDEX idx_contacts_company ON contacts(company_id)`
+- `CREATE INDEX idx_companies_name ON companies(name)`
+
+**And** an auto-update trigger is created for `companies.updated_at`:
+```sql
+CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+**And** I can verify via Supabase SQL Editor:
+```sql
+SELECT c.name, COUNT(con.id) as contact_count
+FROM companies c
+LEFT JOIN contacts con ON con.company_id = c.id
+GROUP BY c.id, c.name
+ORDER BY contact_count DESC;
+```
+
+**And** all 9 companies show correct contact counts
+**And** no contacts have NULL company_id unless original company was blank
+**And** foreign key constraints are enforced (deleting company sets contacts.company_id to NULL)
+
+**Prerequisites:** Epic 4.1 complete (deals database exists)
+
+**Technical Notes:**
+- Use Supabase MCP: `apply_migration(name: "companies_table_and_migration", query: "...")`
+- Migration is idempotent (safe to re-run)
+- Test migration on local Supabase instance first
+- Backup contact data before running DROP COLUMN
+- Use PostgreSQL UUID v4 for primary keys (Architecture section 6.2)
+- Follow normalized data model principles (Architecture section 6)
+- Case-insensitive company name matching: `LOWER(company) = LOWER(name)`
+
+**Database Migration SQL:**
+```sql
+-- Step 1: Create companies table
+CREATE TABLE companies (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT UNIQUE NOT NULL,
+  industry TEXT,
+  size TEXT CHECK (size IN ('Startup', 'SMB', 'Enterprise', NULL)),
+  website TEXT,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Step 2: Create indexes
+CREATE INDEX idx_companies_name ON companies(name);
+
+-- Step 3: Parse and insert unique companies from contacts
+INSERT INTO companies (name)
+SELECT DISTINCT TRIM(company)
+FROM contacts
+WHERE company IS NOT NULL AND TRIM(company) != ''
+ON CONFLICT (name) DO NOTHING;
+
+-- Step 4: Add company_id to contacts
+ALTER TABLE contacts ADD COLUMN company_id UUID REFERENCES companies(id) ON DELETE SET NULL;
+
+-- Step 5: Map contacts to companies
+UPDATE contacts
+SET company_id = (
+  SELECT c.id FROM companies c
+  WHERE LOWER(c.name) = LOWER(TRIM(contacts.company))
+  LIMIT 1
+)
+WHERE company IS NOT NULL AND TRIM(company) != '';
+
+-- Step 6: Create index on company_id
+CREATE INDEX idx_contacts_company ON contacts(company_id);
+
+-- Step 7: Verify migration (should return 0 unmapped contacts)
+SELECT COUNT(*) as unmapped_contacts
+FROM contacts
+WHERE company IS NOT NULL AND TRIM(company) != '' AND company_id IS NULL;
+
+-- Step 8: Drop old column (only after verification!)
+ALTER TABLE contacts DROP COLUMN company;
+
+-- Step 9: Add update trigger
+CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+---
+
+### Story 5.2: Company List Page & CRUD Operations
+
+**User Story:**
+As a sales team member, I want to view, create, edit, and delete company records, so that I can manage organizational information and keep the company database accurate.
+
+**Acceptance Criteria:**
+
+**Given** I am logged into NovaCRM
+**When** I navigate to `/companies` in the sidebar
+**Then** the Companies list page loads in <2 seconds
+
+**And** I see a page header:
+- Title: "Companies" (2rem, weight 800, Mocha Text #cdd6f4)
+- Subtitle: "Manage your business relationships and organizations" (1rem, Mocha Subtext0)
+- Primary button: "+ New Company" (Orange #F25C05, follows button pattern from UX Design line 309)
+- Secondary button: "Export List" (Surface0 background, follows UX Design line 325)
+
+**And** I see a filter/search bar (follows UX Design lines 766-775):
+- Search input: "Search companies..." (flex: 1, max-width 500px)
+- Filter dropdown: "All Industries" | "Startup" | "SMB" | "Enterprise"
+- Sort dropdown: "Name (A-Z)" | "Name (Z-A)" | "Contact Count" | "Deal Value"
+
+**And** I see a companies table (follows UX Design table pattern lines 567-602):
+- Columns: Company | Industry | Contacts | Deal Value | Actions
+- Company cell includes:
+  - Company avatar (32×32px, 2-letter initials, gradient background, UX Design lines 605-621)
+  - Company name (weight 700, Mocha Text)
+- Industry cell: Badge with industry name (if set)
+- Contacts cell: Count with icon (e.g., "12 contacts")
+- Deal Value cell: Dollar amount (JetBrains Mono font, weight 700, UX Design line 625)
+- Actions cell: Edit icon button, Delete icon button (40×40px, UX Design lines 339-351)
+
+**And** table rows have hover effect: `background: rgba(242, 92, 5, 0.03)` (UX Design line 600)
+**And** table is responsive: converts to card list on mobile (<768px)
+**And** pagination shows "Showing 1-50 of X companies" with page controls
+
+**When** I click "+ New Company" button
+**Then** a modal opens (follows modal pattern UX Design lines 635-672):
+- Title: "Add New Company"
+- Form fields (follows input pattern UX Design lines 484-515):
+  - Company Name: TEXT input (required, max 200 chars)
+  - Industry: TEXT input (optional, max 100 chars)
+  - Size: SELECT dropdown (optional: Startup, SMB, Enterprise)
+  - Website: URL input (optional, validated URL format)
+  - Notes: TEXTAREA (optional, rich text future enhancement)
+- Footer buttons: "Cancel" (secondary), "Create Company" (primary orange)
+
+**And** when I submit the form with valid data
+**Then** POST `/api/companies` is called with payload:
+```json
+{
+  "name": "Acme Corporation",
+  "industry": "Manufacturing",
+  "size": "Enterprise",
+  "website": "https://acmecorp.com",
+  "notes": "Potential partnership opportunity"
+}
+```
+
+**And** Supabase inserts record into `companies` table
+**And** the modal closes with success toast: "✓ Company created" (green, 3s duration, UX Design line 902)
+**And** the companies table refreshes showing the new company
+**And** the new company appears with 0 contacts initially
+
+**When** I click the Edit icon on a company row
+**Then** the edit modal opens pre-filled with company data
+**And** I can modify any field except ID/timestamps
+**And** when I save, PUT `/api/companies/:id` updates the record
+**And** the table row updates immediately (optimistic UI update)
+**And** success toast appears: "✓ Company updated"
+
+**When** I click the Delete icon on a company
+**Then** a confirmation modal appears:
+- Title: "⚠️ Delete Company?"
+- Message: "Are you sure you want to delete [Company Name]? All contacts linked to this company will be unlinked (not deleted)."
+- Buttons: "Cancel" (secondary), "Delete" (red, destructive)
+
+**And** when I confirm deletion
+**Then** DELETE `/api/companies/:id` is called
+**And** the company record is deleted from database
+**And** all contacts with `company_id = :id` have `company_id` set to NULL (ON DELETE SET NULL)
+**And** the company disappears from the table
+**And** success toast: "✓ Company deleted"
+
+**And** validation error handling:
+- Duplicate company name: "❌ Company name already exists" (red toast, 5s)
+- Invalid URL format: Red border on website field + inline error text
+- Empty required fields: Red border + "This field is required"
+
+**Prerequisites:** Story 5.1 complete (companies table exists)
+
+**Technical Notes:**
+- API route: `app/api/companies/route.ts` (GET, POST)
+- API route: `app/api/companies/[id]/route.ts` (GET, PUT, DELETE)
+- Page component: `app/(dashboard)/companies/page.tsx`
+- Follow Next.js 15 App Router pattern (Architecture lines 67-72)
+- Use Supabase client: `createClient()` from `@/lib/supabase/server` (Architecture lines 340-348)
+- Table component reuses Contact list patterns from `app/(dashboard)/contacts/page.tsx`
+- Modal component follows DealDetailModal pattern
+- Implement search with debouncing (300ms delay)
+- Pagination: 50 companies per page
+- Sort/filter via Supabase query parameters
+
+---
+
+### Story 5.3: Company Detail View with Linked Contacts & Deals
+
+**User Story:**
+As a sales team member, I want to view detailed company information with all linked contacts and deals, so that I can see the full relationship history and manage company-level interactions.
+
+**Acceptance Criteria:**
+
+**Given** I am on the Companies list page
+**When** I click on a company name row
+**Then** the Company Detail Modal opens (follows UX Design modal pattern lines 635-672)
+
+**And** the modal displays:
+- Modal width: 900px (larger than standard 600px for two-column layout)
+- Modal height: max-height 90vh, scrollable
+- Background: Mocha Mantle (#181825)
+- Border: 1px solid Mocha Surface0
+- Border-radius: 16px
+
+**And** the modal header shows:
+- Company avatar (48×48px, 2-letter initials, gradient background)
+- Company name (1.5rem, weight 800)
+- Industry badge (if set)
+- Size badge (if set)
+- Edit button (icon only, 40×40px, follows UX Design line 339)
+- Close button (×, top-right corner)
+
+**And** the modal body has a 2-column grid layout (follows Deal Detail View pattern, UX Design lines 857-877):
+- Left column (60% width): Company Information
+- Right column (40% width): Related Data
+
+**Left Column - Company Information:**
+- Details Section: Industry, Size, Website, Created, Last Updated
+- Notes Section: Rich text editor (TEXTAREA for MVP)
+- Quick Actions: "+ Add Contact", "+ Create Deal", "View All Contacts" buttons
+
+**Right Column - Related Data:**
+- Metrics Cards: Total Contacts, Total Deal Value, Open Deals, Win Rate
+- Linked Contacts Section: Scrollable list (max 5 visible)
+- Recent Deals Section: Scrollable list (max 3 visible)
+
+**And** clicking contacts/deals opens their respective detail modals (stacked z-index)
+**And** Quick Actions navigate to forms with company pre-selected
+
+**Prerequisites:** Stories 5.1, 5.2 complete
+
+**Technical Notes:**
+- Component: `app/(dashboard)/components/CompanyDetailModal.tsx`
+- Use Supabase aggregation queries for metrics
+- Modal stacking: Company (z-index: 1000), Contact/Deal (z-index: 1100)
+- Loading states with skeleton loaders
+- Empty states with prompts
+
+---
+
+### Story 5.4: Update Contact Forms to Link Companies
+
+**User Story:**
+As a sales team member, I want contact creation and editing forms to use company selection instead of text input, so that contacts are properly linked to company entities with referential integrity.
+
+**Acceptance Criteria:**
+
+**Given** I am creating or editing a contact
+**When** I open the contact form
+**Then** the "Company" field is a searchable SELECT dropdown (not text input)
+
+**And** the dropdown displays:
+- Search input: "Search companies..." (auto-focused)
+- Company list (max 10 visible, scrollable)
+- Each option shows: avatar, name, contact count
+- "+ Create New Company" option at bottom
+
+**And** when I type a non-existent company name
+**Then** I see "+ Create [Name]'" button for inline creation
+**And** inline mini-form appears with: Name (pre-filled), Industry, Size
+**And** new company is created and immediately selected
+
+**And** when I select existing company
+**Then** dropdown closes, company avatar displays, `company_id` set
+
+**And** contact form payload includes `company_id` UUID
+**And** CSV import updated to lookup/create companies automatically
+
+**Prerequisites:** Stories 5.1, 5.2 complete
+
+**Technical Notes:**
+- Update: `app/(dashboard)/components/ContactFormModal.tsx`
+- Use Headless UI Combobox for searchable dropdown
+- Client-side filtering for performance
+- Debounce search (200ms)
+- Update CSV parser: `lib/csv-parser.ts`
+- TypeScript interface: Change `company: string` → `company_id?: string | null`
+
+---
+
+### Story 5.5: Company Metrics & Dashboard Integration
+
+**User Story:**
+As a sales team member, I want to see company-level metrics on the dashboard and company pages, so that I can quickly assess organizational relationships and prioritize high-value companies.
+
+**Acceptance Criteria:**
+
+**Given** I am on the Dashboard page
+**When** the page loads
+**Then** I see a new "Active Companies" stat card in the 4-card grid
+
+**And** the stat card displays (follows UX Design stat card pattern):
+- Top accent bar: Mocha Lavender (#b4befe)
+- Icon: Building (24×24px, lavender background)
+- Label: "Active Companies"
+- Value: Count of companies with ≥1 contact
+- Change indicator: "+3 this month" (green if positive)
+
+**And** on Companies list page
+**Then** I see a metrics summary bar with 4 mini stat cards:
+- Total Companies, Total Contacts, Total Pipeline Value, Avg Deal Value
+
+**And** companies table shows per-row metrics:
+- Contacts column: Count with icon
+- Deal Value column: Sum with color coding (green >$100k, blue >$10k)
+- Sortable by: Name, Contact Count, Deal Value, Created Date
+
+**And** filtering options:
+- All Companies, High Value (>$100k), Medium ($10k-$100k), Low (<$10k), No Deals
+
+**And** Company Detail Modal shows metrics:
+- Total Contacts, Active Deals, Pipeline Value, Win Rate, Avg Deal Size, Last Activity
+
+**Prerequisites:** Stories 5.1-5.4 complete
+
+**Technical Notes:**
+- Update: `app/(dashboard)/dashboard/page.tsx`
+- Update: `app/api/dashboard/route.ts`
+- Use PostgreSQL aggregation queries
+- Cache dashboard metrics (5 min)
+- Query execution <500ms for 1000 companies
+
+---
+
+**Epic 5 Complete: Company Management & Organization**
+
+**Stories Created:** 5 stories
+**FR Coverage:** FR-COMP.1-8 (Company Management - all new requirements)
+**Architecture Sections Used:** §2.3 (Database schema), §3.3 (API routes), §4.1 (Indexes), §6 (Normalization)
+**UX Sections Used:** §4.3 (Cards), §4.6 (Modals), §4.8 (Tables), §4.9 (Forms), §6 (Dashboard)
+
+Ready for checkpoint validation.
+
+---
+
+## Epic 6: Dashboard & Pipeline Analytics
 
 **Epic Goal:** Provide real-time visibility into sales pipeline health through an executive dashboard with key metrics, pipeline visualization, risk identification, and filtering capabilities for both sales team members and executives.
 
@@ -2939,7 +3328,7 @@ Ready for checkpoint validation.
 
 ---
 
-## Epic 6: Activity Tracking & Email Integration
+## Epic 7: Activity Tracking & Email Integration
 
 **Epic Goal:** Enable sales team members to log all relationship interactions (emails, calls, meetings, LinkedIn messages, WhatsApp) with contacts and deals, view complete activity timelines, and integrate with Outlook email client for seamless communication tracking.
 
@@ -2951,7 +3340,7 @@ Ready for checkpoint validation.
 
 ---
 
-### Story 6.1: Activities Database Table & Activity Types
+### Story 7.1: Activities Database Table & Activity Types
 
 **User Story:**
 As a developer, I want to create the activities table with support for multiple activity types and references to both contacts and deals, so that we can track all relationship interactions comprehensively.
@@ -3019,7 +3408,7 @@ CREATE TRIGGER update_activities_updated_at BEFORE UPDATE ON activities
 
 ---
 
-### Story 6.2: Log Activity Modal with Activity Type Selection
+### Story 7.2: Log Activity Modal with Activity Type Selection
 
 **User Story:**
 As a sales team member (Marcus), I want to quickly log any type of activity (email, call, meeting, etc.) related to a contact or deal, so that I can maintain a complete record of all interactions.
@@ -3136,7 +3525,7 @@ As a sales team member (Marcus), I want to quickly log any type of activity (ema
 
 ---
 
-### Story 6.3: Activity Timeline Component for Contacts & Deals
+### Story 7.3: Activity Timeline Component for Contacts & Deals
 
 **User Story:**
 As a sales team member, I want to see a complete timeline of all activities for a contact or deal in chronological order, so that I can understand the full relationship history at a glance.
@@ -3252,7 +3641,7 @@ As a sales team member, I want to see a complete timeline of all activities for 
 
 ---
 
-### Story 6.4: Outlook Email Integration (Click-to-Email)
+### Story 7.4: Outlook Email Integration (Click-to-Email)
 
 **User Story:**
 As a sales team member (Marcus), I want to click an email button on a contact page that opens Outlook with the contact's email pre-filled, so that I can quickly send emails without manual copying.
@@ -3325,7 +3714,7 @@ As a sales team member (Marcus), I want to click an email button on a contact pa
 
 ---
 
-### Story 6.5: Activity Summary & Recent Activity Dashboard Widget
+### Story 7.5: Activity Summary & Recent Activity Dashboard Widget
 
 **User Story:**
 As a sales team member, I want to see my recent activity summary on the dashboard, so that I can track my engagement with contacts and deals at a glance.
@@ -3426,7 +3815,7 @@ As a sales team member, I want to see my recent activity summary on the dashboar
 
 ---
 
-**Epic 6 Complete: Activity Tracking & Email Integration**
+**Epic 7 Complete: Activity Tracking & Email Integration**
 
 **Stories Created:** 5 stories
 **FR Coverage:** FR7.1-FR7.4 (Email Integration - Outlook), FR4.5 (Activity timeline), FR4.6 (Notes), FR6.5 (Team activity), FR11.2 (Timestamps)
@@ -3446,7 +3835,7 @@ This section maps all functional requirements from the PRD to specific stories i
 - **FR1.2** - Individual accounts with email/password: **Epic 1, Story 1.3**
 - **FR1.3** - Shared visibility to all data: **Epic 1, Story 1.3** (no RLS in MVP)
 - **FR1.4** - Session management and logout: **Epic 1, Story 1.6**
-- **FR1.5** - Role-based access (admin vs sales_rep): **Epic 1, Story 1.3** + **Epic 5, Story 5.5**
+- **FR1.5** - Role-based access (admin vs sales_rep): **Epic 1, Story 1.3** + **Epic 7, Story 7.5**
 
 ### FR2: LinkedIn Lead Capture - Manual Entry
 - **FR2.1** - Manual lead entry form: **Epic 2, Story 2.2**
@@ -3471,7 +3860,7 @@ This section maps all functional requirements from the PRD to specific stories i
 - **FR4.2** - Customizable sales stages: **Epic 1, Story 1.2** (8 default stages)
 - **FR4.3** - Default 8 stages: **Epic 1, Story 1.2**
 - **FR4.4** - Lead assignment and ownership: **Epic 2, Story 2.2**
-- **FR4.5** - Activity timeline: **Epic 6, Story 6.3**
+- **FR4.5** - Activity timeline: **Epic 7, Story 7.3**
 - **FR4.6** - Editable notes: **Epic 2, Story 2.4** + **Epic 4, Story 4.2**
 - **FR4.7** - Contact search and filtering: **Epic 2, Story 2.3**
 
@@ -3486,40 +3875,40 @@ This section maps all functional requirements from the PRD to specific stories i
 - **FR5.8** - Deal status (Open, Won, Lost): **Epic 4, Story 4.1, 4.3**
 
 ### FR6: Pipeline Dashboard
-- **FR6.1** - Real-time pipeline value: **Epic 5, Story 5.1** + **Epic 4, Story 4.5**
-- **FR6.2** - Lead count by stage: **Epic 5, Story 5.2**
-- **FR6.3** - Deals at risk identification: **Epic 5, Story 5.3**
-- **FR6.4** - Recently closed deals: **Epic 5, Story 5.1**
-- **FR6.5** - Team activity summary: **Epic 6, Story 6.5**
-- **FR6.6** - Quick filters: **Epic 5, Story 5.4**
-- **FR6.7** - Dashboard loads <3s: **Epic 5, Story 5.1**
-- **FR6.8** - Four key stat cards: **Epic 5, Story 5.1**
+- **FR6.1** - Real-time pipeline value: **Epic 7, Story 7.1** + **Epic 4, Story 4.5**
+- **FR6.2** - Lead count by stage: **Epic 7, Story 7.2**
+- **FR6.3** - Deals at risk identification: **Epic 7, Story 7.3**
+- **FR6.4** - Recently closed deals: **Epic 7, Story 7.1**
+- **FR6.5** - Team activity summary: **Epic 7, Story 7.5**
+- **FR6.6** - Quick filters: **Epic 7, Story 7.4**
+- **FR6.7** - Dashboard loads <3s: **Epic 7, Story 7.1**
+- **FR6.8** - Four key stat cards: **Epic 7, Story 7.1**
 
 ### FR7: Email Integration - Outlook
-- **FR7.1** - Click-to-email button: **Epic 6, Story 6.4**
-- **FR7.2** - Manual email activity logging: **Epic 6, Story 6.2, 6.4**
-- **FR7.3** - Email history timeline: **Epic 6, Story 6.3, 6.4**
-- **FR7.4** - "Log Email" UI component: **Epic 6, Story 6.2**
+- **FR7.1** - Click-to-email button: **Epic 7, Story 7.4**
+- **FR7.2** - Manual email activity logging: **Epic 7, Story 7.2, 6.4**
+- **FR7.3** - Email history timeline: **Epic 7, Story 7.3, 6.4**
+- **FR7.4** - "Log Email" UI component: **Epic 7, Story 7.2**
 
 ### FR8: Admin Configuration
 - **FR8.1** - Sales stage management: **Epic 1, Story 1.2** (MVP: hard-coded)
 - **FR8.2** - Campaign CRUD operations: **Epic 3, Story 3.5**
 - **FR8.3** - User account management: **Epic 1, Story 1.3** (via Supabase)
-- **FR8.4** - Admin dashboard: **Epic 5, Story 5.1** (shared dashboard)
+- **FR8.4** - Admin dashboard: **Epic 7, Story 7.1** (shared dashboard)
 - **FR8.5** - Settings control panel: **Epic 3, Story 3.5**
 
 ### FR9: Executive Dashboard
-- **FR9.1** - Read-only executive view role: **Epic 5, Story 5.5**
-- **FR9.2** - Real-time pipeline visibility: **Epic 5, Story 5.5**
-- **FR9.3** - Pipeline breakdown by stage/team/campaign: **Epic 5, Story 5.4, 5.5**
-- **FR9.4** - Risk visibility: **Epic 5, Story 5.3, 5.5**
-- **FR9.5** - Data transparency: **Epic 5, Story 5.5**
+- **FR9.1** - Read-only executive view role: **Epic 7, Story 7.5**
+- **FR9.2** - Real-time pipeline visibility: **Epic 7, Story 7.5**
+- **FR9.3** - Pipeline breakdown by stage/team/campaign: **Epic 7, Story 7.4, 5.5**
+- **FR9.4** - Risk visibility: **Epic 7, Story 7.3, 5.5**
+- **FR9.5** - Data transparency: **Epic 7, Story 7.5**
 
 ### FR10: Performance Requirements
 - **FR10.1** - Lead capture <2 minutes: **Epic 2, Story 2.2**
-- **FR10.2** - Dashboard loads <3s: **Epic 5, Story 5.1**
+- **FR10.2** - Dashboard loads <3s: **Epic 7, Story 7.1**
 - **FR10.3** - Duplicate prevention instant: **Epic 2, Story 2.5** + **Epic 3, Story 3.3**
-- **FR10.4** - Pipeline calculation <10s: **Epic 4, Story 4.5** + **Epic 5, Story 5.1**
+- **FR10.4** - Pipeline calculation <10s: **Epic 4, Story 4.5** + **Epic 7, Story 7.1**
 - **FR10.5** - All pages <3s Time to Interactive: **Epic 1, Story 1.1** (Next.js 15)
 
 ### FR11: Data Management

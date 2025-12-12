@@ -26,20 +26,20 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="max-w-[800px]">
-      <h1 className="mb-6 text-3xl font-bold text-[#cdd6f4]">
+    <div className="max-w-[800px] px-4 md:px-0">
+      <h1 className="mb-4 text-2xl font-bold text-[#cdd6f4] md:mb-6 md:text-3xl">
         Welcome to NovaCRM
       </h1>
 
-      <div className="mb-6 rounded-lg border border-[#313244] bg-[#181825] p-6">
+      <div className="mb-4 rounded-lg border border-[#313244] bg-[#181825] p-4 md:mb-6 md:p-6">
         <p className="mb-2 text-sm font-semibold text-[#a6adc8]">
           Authenticated User
         </p>
-        <p className="text-base text-[#cdd6f4]">{user.email}</p>
-        <p className="mt-2 text-xs text-[#6c7086]">ID: {user.id}</p>
+        <p className="break-words text-sm text-[#cdd6f4] md:text-base">{user.email}</p>
+        <p className="mt-2 break-all text-xs text-[#6c7086]">ID: {user.id}</p>
       </div>
 
-      <div className="mb-6 rounded-lg border border-[#89b4fa]/20 bg-[#89b4fa]/10 p-4">
+      <div className="mb-4 rounded-lg border border-[#89b4fa]/20 bg-[#89b4fa]/10 p-4 md:mb-6">
         <p className="text-sm text-[#cdd6f4]">
           ✓ Authentication is working correctly
         </p>

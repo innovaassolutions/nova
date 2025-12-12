@@ -53,8 +53,12 @@ development_status:
   4-5-pipeline-value-calculation-deal-metrics: done
   epic-4-retrospective: optional
 
-  # Epic 5: Dashboard & Pipeline Analytics (5 stories)
-  epic-5: backlog
+  # Epic 5: Company Management & Organization (from epics.md)
+  epic-5: done
+  5-1-companies-database-table-data-migration: done
+  5-2-company-list-page-crud-operations: done
+
+  # Epic 6: Dashboard & Pipeline Analytics (5 stories) - RENUMBERED
   5-1-dashboard-page-four-key-stat-cards: backlog
   5-2-pipeline-funnel-visualization-stage: backlog
   5-3-deals-at-risk-identification-list: backlog

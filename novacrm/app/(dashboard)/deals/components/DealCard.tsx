@@ -79,7 +79,7 @@ export default function DealCard({ deal, totalStages, onClick }: DealCardProps) 
   return (
     <div
       onClick={onClick}
-      className={`rounded-xl border border-[#313244] bg-[#181825] p-6 transition-all hover:border-[#F25C05] hover:shadow-lg cursor-pointer ${getStatusColor()}`}
+      className={`rounded-xl border border-[#313244] bg-[#181825] p-4 transition-all hover:border-[#F25C05] hover:shadow-lg cursor-pointer active:scale-[0.98] md:p-6 ${getStatusColor()}`}
       style={
         deal.status !== 'Open'
           ? { borderLeftWidth: '2px' }
@@ -87,21 +87,21 @@ export default function DealCard({ deal, totalStages, onClick }: DealCardProps) 
       }
     >
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <h3 className="text-lg font-bold text-[#cdd6f4] line-clamp-1">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-bold text-[#cdd6f4] line-clamp-2 break-words md:text-lg">
             {deal.title}
           </h3>
         </div>
-        <div className="ml-4 text-right">
-          <p className="text-lg font-bold text-[#F25C05]">
+        <div className="text-right">
+          <p className="text-base font-bold text-[#F25C05] whitespace-nowrap md:text-lg">
             {formatCurrency(deal.value)}
           </p>
         </div>
       </div>
 
       {/* Contact */}
-      <div className="mt-2 text-sm text-[#a6adc8]">
+      <div className="mt-2 text-sm text-[#a6adc8] break-words">
         {deal.contact.first_name} {deal.contact.last_name}
         {deal.contact.company && (
           <>
@@ -111,10 +111,10 @@ export default function DealCard({ deal, totalStages, onClick }: DealCardProps) 
       </div>
 
       {/* Metrics */}
-      <div className="mt-3 flex items-center gap-4 text-sm text-[#a6adc8]">
+      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#a6adc8] md:text-sm">
         <span>{deal.probability || 0}% probability</span>
-        <span>•</span>
-        <span>
+        <span className="hidden sm:inline">•</span>
+        <span className="break-words">
           {deal.status === 'Open' ? 'Close:' : deal.status === 'Won' ? 'Won:' : 'Lost:'}{' '}
           {deal.status === 'Open'
             ? formatDate(deal.expected_close_date)

@@ -214,16 +214,16 @@ export default function DealsPage() {
   const groupedDeals = isGroupedView ? groupDealsByStage() : null;
 
   return (
-    <div className="flex h-full flex-col p-6">
+    <div className="flex h-full flex-col p-4 md:p-6">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
+      <div className="mb-4 md:mb-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-extrabold text-[#cdd6f4]">Deals</h1>
-            <p className="mt-1 text-base text-[#a6adc8]">Track your sales opportunities</p>
+            <h1 className="text-2xl font-extrabold text-[#cdd6f4] md:text-3xl">Deals</h1>
+            <p className="mt-1 text-sm text-[#a6adc8] md:text-base">Track your sales opportunities</p>
           </div>
           <button
-            className="flex items-center gap-2 rounded-lg bg-[#F25C05] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#ff6b1a]"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#F25C05] px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#ff6b1a] active:scale-95 sm:w-auto"
           >
             <PlusIcon className="h-4 w-4" />
             New Deal
@@ -342,26 +342,26 @@ export default function DealsPage() {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-4">
+      <div className="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:gap-4">
         {/* Search */}
-        <div className="relative flex-1 min-w-[300px]">
+        <div className="relative flex-1">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#a6adc8]" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search deals by title or contact..."
-            className="w-full rounded-lg border border-[#313244] bg-[#181825] pl-10 pr-4 py-2 text-sm text-[#cdd6f4] placeholder-[#6c7086] focus:border-[#F25C05] focus:outline-none focus:ring-1 focus:ring-[#F25C05]"
+            className="w-full rounded-lg border border-[#313244] bg-[#181825] pl-10 pr-4 py-2.5 text-sm text-[#cdd6f4] placeholder-[#6c7086] focus:border-[#F25C05] focus:outline-none focus:ring-1 focus:ring-[#F25C05]"
           />
         </div>
 
         {/* Sort */}
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-[#a6adc8]">Sort by:</label>
+          <label className="text-sm font-medium text-[#a6adc8] whitespace-nowrap">Sort by:</label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="rounded-lg border border-[#313244] bg-[#181825] px-3 py-2 text-sm text-[#cdd6f4] focus:border-[#F25C05] focus:outline-none focus:ring-1 focus:ring-[#F25C05]"
+            className="w-full rounded-lg border border-[#313244] bg-[#181825] px-3 py-2.5 text-sm text-[#cdd6f4] focus:border-[#F25C05] focus:outline-none focus:ring-1 focus:ring-[#F25C05] md:w-auto"
           >
             <option value="expected_close_date">Expected Close Date</option>
             <option value="value_desc">Deal Value (High)</option>

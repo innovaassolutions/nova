@@ -51,23 +51,23 @@ export default function ContactCard({ contact, onViewContact }: ContactCardProps
   };
 
   return (
-    <div className="rounded-xl border border-[#313244] bg-[#181825] p-4">
+    <div className="rounded-xl border border-[#313244] bg-[#181825] p-4 transition-all duration-200 hover:border-[#45475a]">
       {/* Header with Avatar and Name */}
-      <div className="mb-4 flex items-center gap-3">
+      <div className="mb-4 flex items-start gap-3">
         <ContactAvatar
           firstName={contact.first_name}
           lastName={contact.last_name}
           size="lg"
         />
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <button
             onClick={() => onViewContact(contact.id)}
-            className="font-bold text-[#cdd6f4] transition-colors duration-200 hover:text-[#F25C05]"
+            className="font-bold text-[#cdd6f4] transition-colors duration-200 hover:text-[#F25C05] text-left break-words w-full"
           >
             {contact.first_name} {contact.last_name}
           </button>
           {contact.position && (
-            <p className="text-sm text-[#6c7086]">{contact.position}</p>
+            <p className="text-sm text-[#6c7086] break-words">{contact.position}</p>
           )}
         </div>
       </div>
@@ -105,10 +105,10 @@ export default function ContactCard({ contact, onViewContact }: ContactCardProps
       </div>
 
       {/* Footer with Actions */}
-      <div className="flex justify-end gap-2 border-t border-[#313244] pt-4">
+      <div className="flex gap-2 border-t border-[#313244] pt-4">
         <button
           onClick={() => onViewContact(contact.id)}
-          className="flex items-center gap-2 rounded-lg bg-[#313244] px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-colors duration-200 hover:bg-[#45475a] hover:text-[#F25C05]"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#313244] px-3 py-2.5 text-sm font-medium text-[#cdd6f4] transition-all duration-200 hover:bg-[#45475a] hover:text-[#F25C05] active:scale-95"
           aria-label="View contact"
         >
           <EyeIcon className="h-5 w-5" />
@@ -116,7 +116,7 @@ export default function ContactCard({ contact, onViewContact }: ContactCardProps
         </button>
         <button
           onClick={() => onViewContact(contact.id)}
-          className="flex items-center gap-2 rounded-lg bg-[#313244] px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-colors duration-200 hover:bg-[#45475a] hover:text-[#F25C05]"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#313244] px-3 py-2.5 text-sm font-medium text-[#cdd6f4] transition-all duration-200 hover:bg-[#45475a] hover:text-[#F25C05] active:scale-95"
           aria-label="Edit contact"
         >
           <PencilIcon className="h-5 w-5" />
