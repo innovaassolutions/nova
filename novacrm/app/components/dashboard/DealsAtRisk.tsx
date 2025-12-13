@@ -42,7 +42,16 @@ interface DealsAtRiskData {
   total_at_risk: number
 }
 
-export default function DealsAtRisk() {
+interface DealsAtRiskProps {
+  filters?: {
+    owner_id?: string
+    campaign_id?: string
+    start_date?: string
+    end_date?: string
+  }
+}
+
+export default function DealsAtRisk({ filters }: DealsAtRiskProps) {
   const router = useRouter()
   const [data, setData] = useState<DealsAtRiskData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -50,14 +59,24 @@ export default function DealsAtRisk() {
 
   useEffect(() => {
     fetchAtRiskDeals()
-  }, [])
+  }, [filters])
 
   const fetchAtRiskDeals = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      const response = await fetch('/api/dashboard/deals-at-risk?limit=5')
+      // Build query params with filters
+      const params = new URLSearchParams({ limit: '5' })
+      if (filters?.owner_id) params.append('owner_id', filters.owner_id)
+      if (filters?.campaign_id) params.append('campaign_id', filters.campaign_id)
+      if (filters?.start_date) params.append('start_date', filters.start_date)
+      if (filters?.end_date) params.append('end_date', filters.end_date)
+
+      const queryString = params.toString()
+      const url = `/api/dashboard/deals-at-risk${queryString ? `?${queryString}` : ''}`
+
+      const response = await fetch(url)
 
       if (!response.ok) {
         throw new Error('Failed to fetch at-risk deals')

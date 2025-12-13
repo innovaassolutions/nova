@@ -27,6 +27,10 @@ export async function GET(request: Request) {
     // Parse query parameters
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '5')
+    const ownerId = searchParams.get('owner_id')
+    const campaignId = searchParams.get('campaign_id')
+    const startDate = searchParams.get('start_date')
+    const endDate = searchParams.get('end_date')
 
     // Calculate date thresholds
     const now = new Date()
@@ -34,8 +38,8 @@ export async function GET(request: Request) {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
     const today = now.toISOString().split('T')[0]
 
-    // Fetch all open deals with related data
-    const { data: deals, error: dealsError } = await supabase
+    // Build deals query with filters
+    let dealsQuery = supabase
       .from('deals')
       .select(`
         id,
@@ -45,12 +49,31 @@ export async function GET(request: Request) {
         expected_close_date,
         created_at,
         updated_at,
-        contact:contacts(id, first_name, last_name, companies(name)),
+        owner_id,
+        contact:contacts(id, first_name, last_name, campaign_id, companies(name)),
         stage:pipeline_stages(id, name),
         owner:users(id, name)
       `)
       .eq('status', 'Open')
       .order('updated_at', { ascending: true }) // Oldest updates first
+
+    // Apply owner filter
+    if (ownerId) {
+      dealsQuery = dealsQuery.eq('owner_id', ownerId)
+    }
+
+    // Apply date range filter (for created_at)
+    if (startDate) {
+      dealsQuery = dealsQuery.gte('created_at', startDate)
+    }
+    if (endDate) {
+      const endOfDay = new Date(endDate)
+      endOfDay.setHours(23, 59, 59, 999)
+      dealsQuery = dealsQuery.lte('created_at', endOfDay.toISOString())
+    }
+
+    // Fetch all open deals with related data
+    const { data: deals, error: dealsError } = await dealsQuery
 
     if (dealsError) {
       console.error('Error fetching deals for at-risk analysis:', dealsError)
@@ -60,8 +83,14 @@ export async function GET(request: Request) {
       )
     }
 
+    // Apply campaign filter (client-side since it's nested)
+    let filteredDeals = deals || []
+    if (campaignId) {
+      filteredDeals = (deals || []).filter((deal: any) => deal.contact?.campaign_id === campaignId)
+    }
+
     // Analyze each deal for risk factors
-    const atRiskDeals = (deals || []).map((deal) => {
+    const atRiskDeals = filteredDeals.map((deal) => {
       const risks: string[] = []
       let riskSeverity = 0 // Higher = more severe
 
