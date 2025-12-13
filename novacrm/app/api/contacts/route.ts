@@ -15,7 +15,7 @@ interface ContactRequest {
   last_name: string;
   linkedin_url?: string;
   email?: string;
-  company?: string;
+  company_id?: string;
   position?: string;
   connected_on?: string;
   source?: string;
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     // Apply search filter (case-insensitive search across multiple fields)
     if (search) {
       query = query.or(
-        `first_name.ilike.%${search}%,last_name.ilike.%${search}%,company.ilike.%${search}%,position.ilike.%${search}%`
+        `first_name.ilike.%${search}%,last_name.ilike.%${search}%,position.ilike.%${search}%`
       );
     }
 
@@ -82,7 +82,9 @@ export async function GET(request: NextRequest) {
     } else if (sort === 'name-desc') {
       query = query.order('last_name', { ascending: false }).order('first_name', { ascending: false });
     } else if (sort === 'company') {
-      query = query.order('company', { ascending: true, nullsFirst: false });
+      // Note: company sorting removed - contacts.company field no longer exists
+      // Company data is now in companies table via company_id foreign key
+      query = query.order('created_at', { ascending: false });
     } else {
       // Default: recently added
       query = query.order('created_at', { ascending: false });
@@ -190,7 +192,7 @@ export async function POST(request: NextRequest) {
         last_name: body.last_name.trim(),
         linkedin_url: body.linkedin_url ? body.linkedin_url.trim() : null,
         email: body.email?.trim() || null,
-        company: body.company?.trim() || null,
+        company_id: body.company_id || null,
         position: body.position?.trim() || null,
         connected_on: body.connected_on || null,
         source: body.source || 'Manual Entry',

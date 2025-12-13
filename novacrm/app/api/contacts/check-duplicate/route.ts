@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     if (linkedin_url) {
       const { data, error } = await supabase
         .from('contacts')
-        .select('id, first_name, last_name, linkedin_url, company, position, email')
+        .select('id, first_name, last_name, linkedin_url, position, email')
         .eq('linkedin_url', linkedin_url);
 
       if (error) {
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     if (!queryError && first_name && last_name) {
       const { data, error } = await supabase
         .from('contacts')
-        .select('id, first_name, last_name, linkedin_url, company, position, email')
+        .select('id, first_name, last_name, linkedin_url, position, email')
         .ilike('first_name', first_name)
         .ilike('last_name', last_name);
 
