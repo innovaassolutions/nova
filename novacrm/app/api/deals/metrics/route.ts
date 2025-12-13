@@ -22,6 +22,15 @@ export async function GET(request: Request) {
       )
     }
 
+    // Get user role for role-based filtering
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const userRole = userData?.role || 'sales_rep'
+
     // AC8: Parse query parameters for filtering
     const { searchParams } = new URL(request.url)
     const stageId = searchParams.get('stage_id')
@@ -38,8 +47,11 @@ export async function GET(request: Request) {
       query = query.eq('stage_id', stageId)
     }
 
+    // Role-based filtering: sales_rep can only see their own deals
     if (ownerId) {
       query = query.eq('owner_id', ownerId)
+    } else if (userRole === 'sales_rep') {
+      query = query.eq('owner_id', user.id)
     }
 
     // AC8: Fetch deals

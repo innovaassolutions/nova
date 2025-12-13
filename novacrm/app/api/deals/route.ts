@@ -19,6 +19,15 @@ export async function GET(request: Request) {
       )
     }
 
+    // Get user role for role-based filtering
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const userRole = userData?.role || 'sales_rep'
+
     // Parse query parameters
     const { searchParams } = new URL(request.url)
     const stageId = searchParams.get('stage_id')
@@ -50,12 +59,17 @@ export async function GET(request: Request) {
       query = query.eq('status', status)
     }
 
+    // Role-based filtering: sales_rep can only see their own deals
+    // admin and executive can see all deals
     if (ownerId) {
       if (ownerId === 'me') {
         query = query.eq('owner_id', user.id)
       } else {
         query = query.eq('owner_id', ownerId)
       }
+    } else if (userRole === 'sales_rep') {
+      // Automatically filter to only show their deals
+      query = query.eq('owner_id', user.id)
     }
 
     if (contactId) {
@@ -88,10 +102,17 @@ export async function GET(request: Request) {
       )
     }
 
-    // Calculate stage counts for tabs
-    const { data: allDeals } = await supabase
+    // Calculate stage counts for tabs (with same role-based filtering)
+    let stageCountsQuery = supabase
       .from('deals')
       .select('stage_id')
+
+    // Apply same role-based filtering to stage counts
+    if (userRole === 'sales_rep') {
+      stageCountsQuery = stageCountsQuery.eq('owner_id', user.id)
+    }
+
+    const { data: allDeals } = await stageCountsQuery
 
     const stageCounts: Record<string, number> = {}
     if (allDeals) {

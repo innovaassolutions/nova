@@ -33,7 +33,7 @@ interface Deal {
     first_name: string;
     last_name: string;
     company: string | null;
-  };
+  } | null;
 }
 
 interface PipelineStage {

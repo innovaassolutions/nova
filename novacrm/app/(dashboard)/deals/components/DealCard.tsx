@@ -27,7 +27,7 @@ interface DealCardProps {
       first_name: string;
       last_name: string;
       company: string | null;
-    };
+    } | null;
   };
   totalStages: number;
   onClick: () => void;
@@ -102,11 +102,17 @@ export default function DealCard({ deal, totalStages, onClick }: DealCardProps) 
 
       {/* Contact */}
       <div className="mt-2 text-sm text-[#a6adc8] break-words">
-        {deal.contact.first_name} {deal.contact.last_name}
-        {deal.contact.company && (
+        {deal.contact ? (
           <>
-            {' '}• {deal.contact.company}
+            {deal.contact.first_name} {deal.contact.last_name}
+            {deal.contact.company && (
+              <>
+                {' '}• {deal.contact.company}
+              </>
+            )}
           </>
+        ) : (
+          <span className="text-[#6c7086]">No contact</span>
         )}
       </div>
 
