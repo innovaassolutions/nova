@@ -39,6 +39,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Get user role for role-based filtering
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  const userRole = userData?.role || 'sales_rep';
+
   try {
     // Parse query parameters
     const { searchParams } = new URL(request.url);
@@ -74,6 +83,9 @@ export async function GET(request: NextRequest) {
       const campaignId = filter.replace('campaign-', '');
       // For campaign filter, we need to join through campaign_contacts
       query = query.eq('campaign_contacts.campaign_id', campaignId);
+    } else if (userRole === 'sales_rep') {
+      // Role-based filtering: sales_rep users only see their own contacts
+      query = query.eq('owner_id', user.id);
     }
 
     // Apply sort

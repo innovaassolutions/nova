@@ -34,6 +34,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Get user role for role-based filtering
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  const userRole = userData?.role || 'sales_rep';
+
   try {
     // Parse query parameters
     const { searchParams } = new URL(request.url);
@@ -44,10 +53,32 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
 
+    // For sales_rep users, get company IDs from their contacts
+    let allowedCompanyIds: string[] | null = null;
+    if (userRole === 'sales_rep') {
+      const { data: userContacts } = await supabase
+        .from('contacts')
+        .select('company_id')
+        .eq('owner_id', user.id)
+        .not('company_id', 'is', null);
+
+      allowedCompanyIds = [...new Set((userContacts || []).map(c => c.company_id).filter(Boolean))] as string[];
+
+      // If sales_rep has no contacts with companies, return empty
+      if (allowedCompanyIds.length === 0) {
+        return NextResponse.json({ companies: [], total: 0 }, { status: 200 });
+      }
+    }
+
     // Start building the query
     let query = supabase
       .from('companies')
       .select('*');
+
+    // Apply role-based filtering
+    if (userRole === 'sales_rep' && allowedCompanyIds) {
+      query = query.in('id', allowedCompanyIds);
+    }
 
     // Apply search filter (case-insensitive search on name and industry)
     if (search) {
@@ -92,17 +123,29 @@ export async function GET(request: NextRequest) {
     // For each company, fetch contact count and deal value
     const companiesWithMetrics = await Promise.all(
       (companies || []).map(async (company) => {
-        // Get contact count
-        const { count: contactsCount } = await supabase
+        // Get contact count (filtered by owner for sales_rep)
+        let contactsQuery = supabase
           .from('contacts')
           .select('*', { count: 'exact', head: true })
           .eq('company_id', company.id);
 
-        // Get deal value (sum of all deals for contacts in this company)
-        const { data: deals } = await supabase
+        if (userRole === 'sales_rep') {
+          contactsQuery = contactsQuery.eq('owner_id', user.id);
+        }
+
+        const { count: contactsCount } = await contactsQuery;
+
+        // Get deal value (sum of all deals for contacts in this company, filtered by owner for sales_rep)
+        let dealsQuery = supabase
           .from('deals')
-          .select('value, contacts!inner(company_id)')
+          .select('value, owner_id, contacts!inner(company_id)')
           .eq('contacts.company_id', company.id);
+
+        if (userRole === 'sales_rep') {
+          dealsQuery = dealsQuery.eq('owner_id', user.id);
+        }
+
+        const { data: deals } = await dealsQuery;
 
         const dealValue = deals?.reduce((sum, deal) => sum + (deal.value || 0), 0) || 0;
 
