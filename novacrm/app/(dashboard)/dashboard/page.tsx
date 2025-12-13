@@ -63,15 +63,53 @@ export default function DashboardPage() {
     setError(null)
 
     try {
+      // Fetch contact IDs for campaign filter (if specified)
+      let campaignContactIds: string[] = []
+      if (filters.campaign_id) {
+        const { data: campaignContacts, error: campaignContactsError } = await supabase
+          .from('campaign_contacts')
+          .select('contact_id')
+          .eq('campaign_id', filters.campaign_id)
+
+        if (campaignContactsError) {
+          console.error('Error fetching campaign contacts:', campaignContactsError)
+          setError('Failed to load campaign contacts')
+          setLoading(false)
+          return
+        }
+
+        campaignContactIds = (campaignContacts || []).map((cc: any) => cc.contact_id)
+      }
+
       // Build query with filters
       let dealsQuery = supabase
         .from('deals')
-        .select('value, probability, status, expected_close_date, closed_at, owner_id, contact:contacts(campaign_id), created_at')
+        .select('value, probability, status, expected_close_date, closed_at, owner_id, contact_id, created_at')
         .in('status', ['Open', 'Won', 'Lost'])
 
       // Apply owner filter
       if (filters.owner_id) {
         dealsQuery = dealsQuery.eq('owner_id', filters.owner_id)
+      }
+
+      // Apply campaign filter via contact IDs
+      if (filters.campaign_id && campaignContactIds.length > 0) {
+        dealsQuery = dealsQuery.in('contact_id', campaignContactIds)
+      } else if (filters.campaign_id && campaignContactIds.length === 0) {
+        // Campaign has no contacts, show empty stats
+        setStatsData({
+          total_pipeline_value: 0,
+          total_pipeline_trend: '↑ 0%',
+          weighted_pipeline_value: 0,
+          average_probability: 0,
+          open_deals_count: 0,
+          closing_soon_count: 0,
+          win_rate: 0,
+          won_count: 0,
+          lost_count: 0,
+        })
+        setLoading(false)
+        return
       }
 
       // Apply date range filter (for created_at)
@@ -93,11 +131,7 @@ export default function DashboardPage() {
         return
       }
 
-      // Apply campaign filter (client-side since it's nested)
       let filteredDeals = deals
-      if (filters.campaign_id) {
-        filteredDeals = deals.filter((d: any) => d.contact?.campaign_id === filters.campaign_id)
-      }
 
       // Calculate metrics (same logic as before)
       const openDeals = filteredDeals.filter((d: any) => d.status === 'Open')

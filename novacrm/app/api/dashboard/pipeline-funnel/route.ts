@@ -29,6 +29,25 @@ export async function GET(request: Request) {
     const startDate = searchParams.get('start_date')
     const endDate = searchParams.get('end_date')
 
+    // Fetch contact IDs for campaign filter (if specified)
+    let campaignContactIds: string[] = []
+    if (campaignId) {
+      const { data: campaignContacts, error: campaignContactsError } = await supabase
+        .from('campaign_contacts')
+        .select('contact_id')
+        .eq('campaign_id', campaignId)
+
+      if (campaignContactsError) {
+        console.error('Error fetching campaign contacts:', campaignContactsError)
+        return NextResponse.json(
+          { error: 'Failed to fetch campaign contacts' },
+          { status: 500 }
+        )
+      }
+
+      campaignContactIds = (campaignContacts || []).map((cc: any) => cc.contact_id)
+    }
+
     // Fetch all pipeline stages ordered by order_num
     const { data: stages, error: stagesError } = await supabase
       .from('pipeline_stages')
@@ -46,7 +65,7 @@ export async function GET(request: Request) {
     // Build deals query with filters
     let dealsQuery = supabase
       .from('deals')
-      .select('stage_id, value, status, created_at, owner_id, contact:contacts(campaign_id)')
+      .select('stage_id, value, status, created_at, owner_id, contact_id')
       .eq('status', 'Open') // Only count open deals in the funnel
 
     // Apply filters (Story 6.4)
@@ -56,6 +75,28 @@ export async function GET(request: Request) {
       } else {
         dealsQuery = dealsQuery.eq('owner_id', ownerId)
       }
+    }
+
+    // Apply campaign filter via contact IDs
+    if (campaignId && campaignContactIds.length > 0) {
+      dealsQuery = dealsQuery.in('contact_id', campaignContactIds)
+    } else if (campaignId && campaignContactIds.length === 0) {
+      // Campaign has no contacts, return empty result
+      return NextResponse.json(
+        {
+          funnel_data: stages.map((stage) => ({
+            stage_id: stage.id,
+            stage_name: stage.name,
+            order_num: stage.order_num,
+            deal_count: 0,
+            total_value: 0,
+            conversion_rate: null,
+          })),
+          total_pipeline_value: 0,
+          total_deals: 0,
+        },
+        { status: 200 }
+      )
     }
 
     if (startDate) {
@@ -76,13 +117,7 @@ export async function GET(request: Request) {
       )
     }
 
-    // Filter by campaign if specified (via contact relationship)
     let filteredDeals = deals || []
-    if (campaignId && filteredDeals) {
-      filteredDeals = filteredDeals.filter(
-        (deal: any) => deal.contact?.campaign_id === campaignId
-      )
-    }
 
     // Group deals by stage and calculate metrics
     const stageMetrics = stages.map((stage) => {

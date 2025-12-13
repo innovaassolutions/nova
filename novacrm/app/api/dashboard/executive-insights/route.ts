@@ -33,15 +33,52 @@ export async function GET(request: Request) {
     const thirtyDaysFromNow = new Date()
     thirtyDaysFromNow.setDate(today.getDate() + 30)
 
+    // Fetch contact IDs for campaign filter (if specified)
+    let campaignContactIds: string[] = []
+    if (campaignId) {
+      const { data: campaignContacts, error: campaignContactsError } = await supabase
+        .from('campaign_contacts')
+        .select('contact_id')
+        .eq('campaign_id', campaignId)
+
+      if (campaignContactsError) {
+        console.error('Error fetching campaign contacts:', campaignContactsError)
+        return NextResponse.json(
+          { error: 'Failed to fetch campaign contacts' },
+          { status: 500 }
+        )
+      }
+
+      campaignContactIds = (campaignContacts || []).map((cc: any) => cc.contact_id)
+    }
+
     // Build deals query with filters
     let dealsQuery = supabase
       .from('deals')
-      .select('value, probability, expected_close_date, status, owner_id, contact:contacts(campaign_id), owner:users(id, name)')
+      .select('value, probability, expected_close_date, status, owner_id, contact_id, owner:users(id, name)')
       .eq('status', 'Open')
 
     // Apply owner filter
     if (ownerId) {
       dealsQuery = dealsQuery.eq('owner_id', ownerId)
+    }
+
+    // Apply campaign filter via contact IDs
+    if (campaignId && campaignContactIds.length > 0) {
+      dealsQuery = dealsQuery.in('contact_id', campaignContactIds)
+    } else if (campaignId && campaignContactIds.length === 0) {
+      // Campaign has no contacts, return empty result
+      return NextResponse.json(
+        {
+          team_performance: [],
+          forecast: {
+            expected_closes: 0,
+            weighted_value: 0,
+            average_probability: 0,
+          },
+        },
+        { status: 200 }
+      )
     }
 
     // Apply date range filter (for created_at)
@@ -64,11 +101,7 @@ export async function GET(request: Request) {
       )
     }
 
-    // Apply campaign filter (client-side since it's nested)
     let filteredDeals = deals || []
-    if (campaignId) {
-      filteredDeals = (deals || []).filter((deal: any) => deal.contact?.campaign_id === campaignId)
-    }
 
     // Calculate team performance (group by owner)
     const teamPerformanceMap = new Map<string, {

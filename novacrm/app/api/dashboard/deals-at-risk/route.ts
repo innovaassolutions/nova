@@ -38,6 +38,25 @@ export async function GET(request: Request) {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
     const today = now.toISOString().split('T')[0]
 
+    // Fetch contact IDs for campaign filter (if specified)
+    let campaignContactIds: string[] = []
+    if (campaignId) {
+      const { data: campaignContacts, error: campaignContactsError } = await supabase
+        .from('campaign_contacts')
+        .select('contact_id')
+        .eq('campaign_id', campaignId)
+
+      if (campaignContactsError) {
+        console.error('Error fetching campaign contacts:', campaignContactsError)
+        return NextResponse.json(
+          { error: 'Failed to fetch campaign contacts' },
+          { status: 500 }
+        )
+      }
+
+      campaignContactIds = (campaignContacts || []).map((cc: any) => cc.contact_id)
+    }
+
     // Build deals query with filters
     let dealsQuery = supabase
       .from('deals')
@@ -50,7 +69,8 @@ export async function GET(request: Request) {
         created_at,
         updated_at,
         owner_id,
-        contact:contacts(id, first_name, last_name, campaign_id, companies(name)),
+        contact_id,
+        contact:contacts(id, first_name, last_name, companies(name)),
         stage:pipeline_stages(id, name),
         owner:users(id, name)
       `)
@@ -60,6 +80,20 @@ export async function GET(request: Request) {
     // Apply owner filter
     if (ownerId) {
       dealsQuery = dealsQuery.eq('owner_id', ownerId)
+    }
+
+    // Apply campaign filter via contact IDs
+    if (campaignId && campaignContactIds.length > 0) {
+      dealsQuery = dealsQuery.in('contact_id', campaignContactIds)
+    } else if (campaignId && campaignContactIds.length === 0) {
+      // Campaign has no contacts, return empty result
+      return NextResponse.json(
+        {
+          at_risk_deals: [],
+          total_at_risk: 0,
+        },
+        { status: 200 }
+      )
     }
 
     // Apply date range filter (for created_at)
@@ -83,11 +117,7 @@ export async function GET(request: Request) {
       )
     }
 
-    // Apply campaign filter (client-side since it's nested)
     let filteredDeals = deals || []
-    if (campaignId) {
-      filteredDeals = (deals || []).filter((deal: any) => deal.contact?.campaign_id === campaignId)
-    }
 
     // Analyze each deal for risk factors
     const atRiskDeals = filteredDeals.map((deal) => {
