@@ -35,16 +35,16 @@ interface PipelineFunnelProps {
   }
 }
 
-// Catppuccin Mocha color palette for stages
+// Catppuccin Mocha color palette (muted) for stages
 const STAGE_COLORS = [
-  '#f38ba8', // Red/Pink
-  '#fab387', // Peach
-  '#f9e2af', // Yellow
-  '#a6e3a1', // Green
-  '#89dceb', // Sky
-  '#89b4fa', // Blue
-  '#cba6f7', // Mauve
-  '#f5c2e7', // Pink
+  '#c6a0f6', // Mauve (muted purple)
+  '#8aadf4', // Blue (muted)
+  '#7dc4e4', // Sky (muted cyan)
+  '#a6da95', // Green (muted)
+  '#eed49f', // Yellow (muted)
+  '#f5a97f', // Peach (muted)
+  '#ed8796', // Maroon (muted red)
+  '#f0c6c6', // Flamingo (muted pink)
 ]
 
 export default function PipelineFunnel({ filters }: PipelineFunnelProps) {
