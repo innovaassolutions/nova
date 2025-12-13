@@ -33,6 +33,8 @@ export default function DashboardPage() {
   const [statsData, setStatsData] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
   const [filters, setFilters] = useState<{
     owner_id?: string
     campaign_id?: string
@@ -45,8 +47,10 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    fetchDashboardStats()
-  }, [filters])
+    if (userRole !== null) {
+      fetchDashboardStats()
+    }
+  }, [filters, userRole, userId])
 
   const checkAuth = async () => {
     const {
@@ -55,7 +59,18 @@ export default function DashboardPage() {
 
     if (!user) {
       router.push('/login')
+      return
     }
+
+    // Fetch user role for role-based filtering
+    setUserId(user.id)
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    setUserRole(userData?.role || 'sales_rep')
   }
 
   const fetchDashboardStats = async () => {
@@ -87,9 +102,12 @@ export default function DashboardPage() {
         .select('value, probability, status, expected_close_date, closed_at, owner_id, contact_id, created_at')
         .in('status', ['Open', 'Won', 'Lost'])
 
-      // Apply owner filter
+      // Apply owner filter with role-based restrictions
       if (filters.owner_id) {
         dealsQuery = dealsQuery.eq('owner_id', filters.owner_id)
+      } else if (userRole === 'sales_rep' && userId) {
+        // sales_rep users only see their own deals
+        dealsQuery = dealsQuery.eq('owner_id', userId)
       }
 
       // Apply campaign filter via contact IDs

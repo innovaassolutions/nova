@@ -24,6 +24,15 @@ export async function GET(request: Request) {
       )
     }
 
+    // Get user role for role-based filtering
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const userRole = userData?.role || 'sales_rep'
+
     // Parse query parameters
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '5')
@@ -80,6 +89,9 @@ export async function GET(request: Request) {
     // Apply owner filter
     if (ownerId) {
       dealsQuery = dealsQuery.eq('owner_id', ownerId)
+    } else if (userRole === 'sales_rep') {
+      // sales_rep users only see their own deals
+      dealsQuery = dealsQuery.eq('owner_id', user.id)
     }
 
     // Apply campaign filter via contact IDs

@@ -22,6 +22,15 @@ export async function GET(request: Request) {
       )
     }
 
+    // Get user role for role-based filtering
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const userRole = userData?.role || 'sales_rep'
+
     // Parse query parameters (for Story 6.4 filters)
     const { searchParams } = new URL(request.url)
     const ownerId = searchParams.get('owner_id')
@@ -75,6 +84,9 @@ export async function GET(request: Request) {
       } else {
         dealsQuery = dealsQuery.eq('owner_id', ownerId)
       }
+    } else if (userRole === 'sales_rep') {
+      // sales_rep users only see their own deals
+      dealsQuery = dealsQuery.eq('owner_id', user.id)
     }
 
     // Apply campaign filter via contact IDs
