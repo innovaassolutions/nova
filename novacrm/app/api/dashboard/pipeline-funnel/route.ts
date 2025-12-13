@@ -80,15 +80,15 @@ export async function GET(request: Request) {
     let filteredDeals = deals || []
     if (campaignId && filteredDeals) {
       filteredDeals = filteredDeals.filter(
-        (deal) => deal.contact?.campaign_id === campaignId
+        (deal: any) => deal.contact?.campaign_id === campaignId
       )
     }
 
     // Group deals by stage and calculate metrics
     const stageMetrics = stages.map((stage) => {
-      const stageDeals = filteredDeals.filter((deal) => deal.stage_id === stage.id)
+      const stageDeals = filteredDeals.filter((deal: any) => deal.stage_id === stage.id)
       const dealCount = stageDeals.length
-      const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0)
+      const totalValue = stageDeals.reduce((sum: number, deal: any) => sum + (deal.value || 0), 0)
 
       return {
         stage_id: stage.id,
