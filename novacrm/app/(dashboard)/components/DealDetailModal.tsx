@@ -14,8 +14,10 @@ import {
   PencilIcon,
   TrashIcon,
   CheckIcon,
+  ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline';
 import { useToast } from './ToastContext';
+import LogActivityModal from './LogActivityModal';
 
 interface Deal {
   id: string;
@@ -101,6 +103,9 @@ export default function DealDetailModal({
 
   // Delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Log activity modal
+  const [showLogActivityModal, setShowLogActivityModal] = useState(false);
 
   // Fetch deal data
   useEffect(() => {
@@ -355,6 +360,13 @@ export default function DealDetailModal({
                 <div className="flex items-center gap-2">
                   {!isEditMode && (
                     <>
+                      <button
+                        onClick={() => setShowLogActivityModal(true)}
+                        className="flex items-center gap-2 rounded-lg bg-[#F25C05] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#ff6b1a]"
+                      >
+                        <ClipboardDocumentListIcon className="h-4 w-4" />
+                        Log Activity
+                      </button>
                       <button
                         onClick={() => setIsEditMode(true)}
                         className="flex items-center gap-2 rounded-lg border border-[#313244] bg-transparent px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-colors hover:bg-[#313244]"
@@ -748,6 +760,21 @@ export default function DealDetailModal({
             </div>
           </div>
         </>
+      )}
+
+      {/* Log Activity Modal */}
+      {deal && (
+        <LogActivityModal
+          contactId={deal.contact.id}
+          dealId={deal.id}
+          contactName={`${deal.contact.first_name} ${deal.contact.last_name}`}
+          isOpen={showLogActivityModal}
+          onClose={() => setShowLogActivityModal(false)}
+          onActivityLogged={() => {
+            setShowLogActivityModal(false);
+            // Could refresh activity timeline here in the future
+          }}
+        />
       )}
     </>
   );

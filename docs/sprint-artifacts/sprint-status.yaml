@@ -70,7 +70,7 @@ development_status:
   # Epic 7: Activity Tracking & Email Integration (5 stories)
   epic-7: in-progress
   7-1-activities-database-table-activity-types: done
-  7-2-log-activity-modal-activity-type-selection: backlog
+  7-2-log-activity-modal-activity-type-selection: done
   7-3-activity-timeline-component-contacts-deals: backlog
   7-4-outlook-email-integration-click-to-email: backlog
   7-5-activity-summary-recent-activity-dashboard-widget: backlog

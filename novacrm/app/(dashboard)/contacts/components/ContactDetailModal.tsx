@@ -8,11 +8,12 @@
  */
 
 import { useState, useEffect } from 'react';
-import { XMarkIcon, PencilIcon, TrashIcon, ArrowLeftIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PencilIcon, TrashIcon, ArrowLeftIcon, PlusIcon, EyeIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 import ContactAvatar from '../../components/ContactAvatar';
 import CampaignBadges from './CampaignBadges';
 import CreateDealModal from './CreateDealModal';
 import DealDetailModal from '../../components/DealDetailModal';
+import LogActivityModal from '../../components/LogActivityModal';
 import { useToast } from '../../components/ToastContext';
 
 interface Contact {
@@ -83,6 +84,7 @@ export default function ContactDetailModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCreateDealModal, setShowCreateDealModal] = useState(false);
   const [showDealDetailModal, setShowDealDetailModal] = useState(false);
+  const [showLogActivityModal, setShowLogActivityModal] = useState(false);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const { showToast } = useToast();
 
@@ -261,8 +263,15 @@ export default function ContactDetailModal({
                   {!isEditMode ? (
                     <>
                       <button
-                        onClick={() => setShowCreateDealModal(true)}
+                        onClick={() => setShowLogActivityModal(true)}
                         className="flex items-center gap-2 rounded-lg bg-[#F25C05] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#ff6b1a]"
+                      >
+                        <ClipboardDocumentListIcon className="h-4 w-4" />
+                        Log Activity
+                      </button>
+                      <button
+                        onClick={() => setShowCreateDealModal(true)}
+                        className="flex items-center gap-2 rounded-lg border border-[#313244] bg-transparent px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-colors hover:bg-[#313244]"
                       >
                         <PlusIcon className="h-4 w-4" />
                         New Deal
@@ -551,6 +560,20 @@ export default function ContactDetailModal({
           }}
           onDealUpdated={fetchDeals}
           onDealDeleted={fetchDeals}
+        />
+      )}
+
+      {/* Log Activity Modal */}
+      {contact && (
+        <LogActivityModal
+          contactId={contact.id}
+          contactName={`${contact.first_name} ${contact.last_name}`}
+          isOpen={showLogActivityModal}
+          onClose={() => setShowLogActivityModal(false)}
+          onActivityLogged={() => {
+            setShowLogActivityModal(false);
+            // Could refresh activity timeline here in the future
+          }}
         />
       )}
     </>
