@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { XMarkIcon, PencilIcon, TrashIcon, ArrowLeftIcon, PlusIcon, EyeIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PencilIcon, TrashIcon, ArrowLeftIcon, PlusIcon, EyeIcon, ClipboardDocumentListIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 import ContactAvatar from '../../components/ContactAvatar';
 import CampaignBadges from './CampaignBadges';
 import CreateDealModal from './CreateDealModal';
@@ -87,6 +87,8 @@ export default function ContactDetailModal({
   const [showDealDetailModal, setShowDealDetailModal] = useState(false);
   const [showLogActivityModal, setShowLogActivityModal] = useState(false);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [showEmailSentPrompt, setShowEmailSentPrompt] = useState(false);
+  const [emailPromptContactName, setEmailPromptContactName] = useState('');
   const { showToast } = useToast();
 
   // Edit form state
@@ -232,6 +234,51 @@ export default function ContactDetailModal({
     });
   };
 
+  // Handle send email button click
+  const handleSendEmail = () => {
+    if (!contact?.email) return;
+
+    // Track when email was sent for post-send prompt
+    const timestamp = Date.now();
+    localStorage.setItem('emailSentTimestamp', timestamp.toString());
+    localStorage.setItem('emailSentContactName', `${contact.first_name} ${contact.last_name}`);
+
+    // Open mailto link (encode email address for safety)
+    window.location.href = `mailto:${encodeURIComponent(contact.email)}`;
+  };
+
+  // Listen for window focus to show post-send prompt
+  useEffect(() => {
+    const handleFocus = () => {
+      const timestamp = localStorage.getItem('emailSentTimestamp');
+      const contactName = localStorage.getItem('emailSentContactName');
+
+      if (timestamp && contactName) {
+        const timeSince = Date.now() - parseInt(timestamp);
+
+        // Show prompt if focus returns within 2 minutes
+        if (timeSince < 120000) {
+          // Clear storage
+          localStorage.removeItem('emailSentTimestamp');
+          localStorage.removeItem('emailSentContactName');
+
+          // Show email sent prompt
+          setEmailPromptContactName(contactName);
+          setShowEmailSentPrompt(true);
+        }
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  // Handle "Yes, Log It" from email sent prompt
+  const handleLogEmailActivity = () => {
+    setShowEmailSentPrompt(false);
+    setShowLogActivityModal(true);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -331,14 +378,33 @@ export default function ContactDetailModal({
                         {contact.position} at {contact.company}
                       </p>
                     )}
-                    {contact.email && (
-                      <a
-                        href={`mailto:${contact.email}`}
-                        className="mt-2 inline-block text-sm text-[#89b4fa] transition-colors hover:text-[#F25C05]"
-                      >
-                        {contact.email}
-                      </a>
-                    )}
+                    <div className="mt-2 flex items-center gap-2">
+                      {contact.email ? (
+                        <>
+                          <span className="text-sm text-[#cdd6f4]">{contact.email}</span>
+                          <button
+                            onClick={handleSendEmail}
+                            title="Send Email"
+                            className="flex items-center gap-1 rounded-md bg-[#181825] px-3 py-1.5 text-xs font-medium text-[#cdd6f4] transition-colors hover:bg-[#F25C05] hover:text-white border border-[#313244] hover:border-[#F25C05]"
+                          >
+                            <EnvelopeIcon className="h-4 w-4" />
+                            Send Email
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-sm text-[#6c7086]">No email address on file</span>
+                          <button
+                            disabled
+                            title="No email address on file"
+                            className="flex items-center gap-1 rounded-md bg-[#181825] px-3 py-1.5 text-xs font-medium text-[#6c7086] border border-[#313244] opacity-50 cursor-not-allowed"
+                          >
+                            <EnvelopeIcon className="h-4 w-4" />
+                            Send Email
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -588,6 +654,38 @@ export default function ContactDetailModal({
             // Could refresh activity timeline here in the future
           }}
         />
+      )}
+
+      {/* Email Sent Prompt */}
+      {showEmailSentPrompt && (
+        <>
+          <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm" onClick={() => setShowEmailSentPrompt(false)}></div>
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div
+              className="w-full max-w-md rounded-2xl border border-[#313244] bg-[#1e1e2e] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-bold text-[#cdd6f4]">Did you send an email?</h3>
+              <p className="mt-3 text-sm text-[#a6adc8]">
+                Did you send an email to <span className="font-semibold text-[#cdd6f4]">{emailPromptContactName}</span>?
+              </p>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowEmailSentPrompt(false)}
+                  className="rounded-lg border border-[#313244] bg-transparent px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-colors hover:bg-[#313244]"
+                >
+                  No, Dismiss
+                </button>
+                <button
+                  onClick={handleLogEmailActivity}
+                  className="rounded-lg bg-[#F25C05] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#ff6b1a]"
+                >
+                  Yes, Log It
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </>
   );
