@@ -42,26 +42,42 @@ export async function GET(request: NextRequest) {
 
     // Build duplicate detection query
     // Check: LinkedIn URL match (exact) OR First Name + Last Name match (case-insensitive)
-    let query = supabase
-      .from('contacts')
-      .select('id, first_name, last_name, linkedin_url, company, position, email');
+    // Since we need OR logic and Supabase doesn't handle complex OR well with .eq(),
+    // we'll do separate queries and combine results
+    let duplicates: any[] = [];
+    let queryError;
 
-    // Build OR condition
-    const orConditions: string[] = [];
-
+    // Query 1: Check LinkedIn URL if provided
     if (linkedin_url) {
-      orConditions.push(`linkedin_url.eq.${linkedin_url}`);
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('id, first_name, last_name, linkedin_url, company, position, email')
+        .eq('linkedin_url', linkedin_url);
+
+      if (error) {
+        queryError = error;
+      } else if (data) {
+        duplicates = [...duplicates, ...data];
+      }
     }
 
-    if (first_name && last_name) {
-      orConditions.push(`and(first_name.ilike.${first_name},last_name.ilike.${last_name})`);
-    }
+    // Query 2: Check name match if provided (and not already errored)
+    if (!queryError && first_name && last_name) {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('id, first_name, last_name, linkedin_url, company, position, email')
+        .ilike('first_name', first_name)
+        .ilike('last_name', last_name);
 
-    if (orConditions.length > 0) {
-      query = query.or(orConditions.join(','));
+      if (error) {
+        queryError = error;
+      } else if (data) {
+        // Merge results and remove duplicates by ID
+        const existingIds = new Set(duplicates.map(d => d.id));
+        const newMatches = data.filter(d => !existingIds.has(d.id));
+        duplicates = [...duplicates, ...newMatches];
+      }
     }
-
-    const { data: duplicates, error: queryError } = await query;
 
     if (queryError) {
       console.error('Error checking for duplicates:', queryError);
