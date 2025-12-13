@@ -71,7 +71,7 @@ development_status:
   epic-7: in-progress
   7-1-activities-database-table-activity-types: done
   7-2-log-activity-modal-activity-type-selection: done
-  7-3-activity-timeline-component-contacts-deals: backlog
+  7-3-activity-timeline-component-contacts-deals: done
   7-4-outlook-email-integration-click-to-email: backlog
   7-5-activity-summary-recent-activity-dashboard-widget: backlog
   epic-7-retrospective: optional

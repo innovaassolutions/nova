@@ -14,6 +14,7 @@ import CampaignBadges from './CampaignBadges';
 import CreateDealModal from './CreateDealModal';
 import DealDetailModal from '../../components/DealDetailModal';
 import LogActivityModal from '../../components/LogActivityModal';
+import ActivityTimeline from '../../components/ActivityTimeline';
 import { useToast } from '../../components/ToastContext';
 
 interface Contact {
@@ -498,6 +499,18 @@ export default function ContactDetailModal({
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Activity Timeline Section */}
+                <div className="mt-6">
+                  <ActivityTimeline
+                    contactId={contact.id}
+                    onEditActivity={(activity) => {
+                      // TODO: Open edit modal with activity data
+                      console.log('Edit activity:', activity);
+                    }}
+                    onActivityUpdated={fetchContact}
+                  />
                 </div>
               </div>
             </div>

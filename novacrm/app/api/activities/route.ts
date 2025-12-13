@@ -1,8 +1,10 @@
 /**
  * Activities API Route
  *
+ * GET /api/activities - Fetch activities for a contact or deal
  * POST /api/activities - Log a new activity
  * Story: 7.2 - Log Activity Modal with Activity Type Selection
+ * Story: 7.3 - Activity Timeline Component
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -15,6 +17,84 @@ interface ActivityRequest {
   subject: string;
   description?: string;
   activity_date: string;
+}
+
+/**
+ * GET /api/activities
+ * Fetch activities for a contact or deal
+ */
+export async function GET(request: NextRequest) {
+  const supabase = await createClient();
+
+  // Check authentication
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const contactId = searchParams.get('contact_id');
+    const dealId = searchParams.get('deal_id');
+    const activityType = searchParams.get('type');
+    const limit = parseInt(searchParams.get('limit') || '20');
+
+    // Validate that at least one of contact_id or deal_id is provided
+    if (!contactId && !dealId) {
+      return NextResponse.json(
+        { error: 'Either contact_id or deal_id must be provided' },
+        { status: 400 }
+      );
+    }
+
+    // Build query
+    let query = supabase
+      .from('activities')
+      .select(`
+        *,
+        logged_by_user:users!activities_logged_by_fkey(id, name)
+      `)
+      .order('activity_date', { ascending: false })
+      .limit(limit);
+
+    // Filter by contact_id or deal_id
+    if (contactId) {
+      query = query.eq('contact_id', contactId);
+    } else if (dealId) {
+      query = query.eq('deal_id', dealId);
+    }
+
+    // Filter by activity type if specified
+    if (activityType && activityType !== 'all') {
+      query = query.eq('activity_type', activityType);
+    }
+
+    const { data: activities, error: fetchError } = await query;
+
+    if (fetchError) {
+      console.error('Error fetching activities:', fetchError);
+      return NextResponse.json(
+        { error: 'Failed to fetch activities' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      activities,
+      count: activities?.length || 0,
+    });
+  } catch (error) {
+    console.error('Unexpected error in activities GET API:', error);
+    return NextResponse.json(
+      { error: 'An unexpected error occurred' },
+      { status: 500 }
+    );
+  }
 }
 
 /**

@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useToast } from './ToastContext';
 import LogActivityModal from './LogActivityModal';
+import ActivityTimeline from './ActivityTimeline';
 
 interface Deal {
   id: string;
@@ -648,6 +649,19 @@ export default function DealDetailModal({
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Activity Timeline Section */}
+                <div className="px-6 pb-6">
+                  <ActivityTimeline
+                    dealId={deal.id}
+                    contactId={deal.contact.id}
+                    onEditActivity={(activity) => {
+                      // TODO: Open edit modal with activity data
+                      console.log('Edit activity:', activity);
+                    }}
+                    onActivityUpdated={fetchDeal}
+                  />
                 </div>
               </div>
 
