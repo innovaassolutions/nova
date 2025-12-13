@@ -22,10 +22,13 @@ import DashboardStats from '@/app/components/dashboard/DashboardStats'
 import PipelineFunnel from '@/app/components/dashboard/PipelineFunnel'
 import DealsAtRisk from '@/app/components/dashboard/DealsAtRisk'
 import DashboardFilters from '@/app/components/dashboard/DashboardFilters'
+import ExecutiveInsights from '@/app/components/dashboard/ExecutiveInsights'
+import { useUserRole } from '@/lib/hooks/useUserRole'
 
 export default function DashboardPage() {
   const router = useRouter()
   const supabase = createClient()
+  const { isExecutive, loading: roleLoading } = useUserRole()
 
   const [statsData, setStatsData] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
@@ -170,7 +173,7 @@ export default function DashboardPage() {
     setFilters(newFilters)
   }
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-[#a6adc8]">Loading dashboard...</div>
@@ -186,7 +189,9 @@ export default function DashboardPage() {
           {/* Title and subtitle */}
           <div>
             <h1 className="text-[2rem] font-extrabold text-[#cdd6f4]">Dashboard</h1>
-            <p className="text-base text-[#a6adc8]">Your sales pipeline at a glance</p>
+            <p className="text-base text-[#a6adc8]">
+              {isExecutive ? 'Executive pipeline overview' : 'Your sales pipeline at a glance'}
+            </p>
           </div>
 
           {/* Story 6.4: Dashboard Filters */}
@@ -206,8 +211,15 @@ export default function DashboardPage() {
 
       {/* Story 6.3: Deals at Risk */}
       <div className="mt-8">
-        <DealsAtRisk filters={filters} />
+        <DealsAtRisk filters={filters} readOnly={isExecutive} />
       </div>
+
+      {/* Story 6.5: Executive Insights (only for executives) */}
+      {isExecutive && (
+        <div className="mt-8">
+          <ExecutiveInsights filters={filters} />
+        </div>
+      )}
     </div>
   )
 }

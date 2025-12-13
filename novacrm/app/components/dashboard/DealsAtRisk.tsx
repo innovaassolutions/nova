@@ -49,9 +49,10 @@ interface DealsAtRiskProps {
     start_date?: string
     end_date?: string
   }
+  readOnly?: boolean
 }
 
-export default function DealsAtRisk({ filters }: DealsAtRiskProps) {
+export default function DealsAtRisk({ filters, readOnly = false }: DealsAtRiskProps) {
   const router = useRouter()
   const [data, setData] = useState<DealsAtRiskData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -221,15 +222,17 @@ export default function DealsAtRisk({ filters }: DealsAtRiskProps) {
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => handleViewDeal(deal.id)}
-                className="flex items-center gap-2 rounded-lg border border-[#313244] bg-[#313244] px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-all hover:bg-[#45475a] active:scale-95"
-              >
-                <EyeIcon className="h-4 w-4" />
-                View Deal
-              </button>
-            </div>
+            {!readOnly && (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleViewDeal(deal.id)}
+                  className="flex items-center gap-2 rounded-lg border border-[#313244] bg-[#313244] px-4 py-2 text-sm font-medium text-[#cdd6f4] transition-all hover:bg-[#45475a] active:scale-95"
+                >
+                  <EyeIcon className="h-4 w-4" />
+                  View Deal
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
