@@ -21,7 +21,7 @@ interface ActivityRequest {
 
 /**
  * GET /api/activities
- * Fetch activities for a contact or deal
+ * Fetch activities for a contact or deal, or recent activities for dashboard
  */
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -42,11 +42,96 @@ export async function GET(request: NextRequest) {
     const dealId = searchParams.get('deal_id');
     const activityType = searchParams.get('type');
     const limit = parseInt(searchParams.get('limit') || '20');
+    const recent = searchParams.get('recent') === 'true';
+    const userId = searchParams.get('user_id');
 
+    // Recent activities mode (for dashboard widget)
+    if (recent) {
+      // Build query with contact and deal joins
+      let query = supabase
+        .from('activities')
+        .select(`
+          *,
+          logged_by_user:users!activities_logged_by_fkey(id, name),
+          contact:contacts(id, first_name, last_name, company),
+          deal:deals(id, title)
+        `)
+        .order('activity_date', { ascending: false })
+        .limit(limit);
+
+      // Filter by user if specified
+      if (userId) {
+        query = query.eq('logged_by', userId);
+      }
+
+      // Filter by activity type if specified
+      if (activityType && activityType !== 'all') {
+        query = query.eq('activity_type', activityType);
+      }
+
+      const { data: activities, error: fetchError } = await query;
+
+      if (fetchError) {
+        console.error('Error fetching recent activities:', fetchError);
+        return NextResponse.json(
+          { error: 'Failed to fetch recent activities' },
+          { status: 500 }
+        );
+      }
+
+      // Calculate stats
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+
+      // Query for stats
+      let statsQuery = supabase
+        .from('activities')
+        .select('activity_date, logged_by');
+
+      if (userId) {
+        statsQuery = statsQuery.eq('logged_by', userId);
+      }
+
+      const { data: allActivities } = await statsQuery;
+
+      const thisWeek = allActivities?.filter((a: any) =>
+        new Date(a.activity_date) >= startOfWeek
+      ).length || 0;
+
+      const thisMonth = allActivities?.filter((a: any) =>
+        new Date(a.activity_date) >= startOfMonth
+      ).length || 0;
+
+      const last30Days = allActivities?.filter((a: any) =>
+        new Date(a.activity_date) >= thirtyDaysAgo
+      ).length || 0;
+
+      const avgPerDay = last30Days / 30;
+
+      return NextResponse.json({
+        success: true,
+        activities,
+        count: activities?.length || 0,
+        stats: {
+          thisWeek,
+          thisMonth,
+          avgPerDay,
+        },
+      });
+    }
+
+    // Standard mode (for contact/deal timelines)
     // Validate that at least one of contact_id or deal_id is provided
     if (!contactId && !dealId) {
       return NextResponse.json(
-        { error: 'Either contact_id or deal_id must be provided' },
+        { error: 'Either contact_id, deal_id, or recent=true must be provided' },
         { status: 400 }
       );
     }

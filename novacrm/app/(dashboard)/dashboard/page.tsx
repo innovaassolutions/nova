@@ -23,6 +23,7 @@ import PipelineFunnel from '@/app/components/dashboard/PipelineFunnel'
 import DealsAtRisk from '@/app/components/dashboard/DealsAtRisk'
 import DashboardFilters from '@/app/components/dashboard/DashboardFilters'
 import ExecutiveInsights from '@/app/components/dashboard/ExecutiveInsights'
+import RecentActivityWidget from '../components/RecentActivityWidget'
 import { useUserRole } from '@/lib/hooks/useUserRole'
 
 export default function DashboardPage() {
@@ -272,6 +273,11 @@ export default function DashboardPage() {
           <ExecutiveInsights filters={filters} />
         </div>
       )}
+
+      {/* Story 7.5: Recent Activity Widget */}
+      <div className="mt-8">
+        <RecentActivityWidget />
+      </div>
     </div>
   )
 }
