@@ -651,7 +651,8 @@ export default function ContactDetailModal({
           onClose={() => setShowLogActivityModal(false)}
           onActivityLogged={() => {
             setShowLogActivityModal(false);
-            // Could refresh activity timeline here in the future
+            // Refresh contact data to show new activity in timeline
+            fetchContact();
           }}
         />
       )}

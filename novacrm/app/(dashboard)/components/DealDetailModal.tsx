@@ -786,7 +786,8 @@ export default function DealDetailModal({
           onClose={() => setShowLogActivityModal(false)}
           onActivityLogged={() => {
             setShowLogActivityModal(false);
-            // Could refresh activity timeline here in the future
+            // Refresh deal data to show new activity in timeline
+            fetchDeal();
           }}
         />
       )}
