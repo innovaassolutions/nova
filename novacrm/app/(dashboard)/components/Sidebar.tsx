@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -15,6 +15,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import LogoutButton from './LogoutButton';
+import { createClient } from '@/lib/supabase/client';
 
 interface NavItem {
   label: string;
@@ -38,8 +39,31 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function fetchUserRole() {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        setUserRole(userData?.role || 'sales_rep');
+      }
+    }
+
+    fetchUserRole();
+  }, [supabase]);
 
   const isActive = (href: string) => pathname === href;
+
+  // Only show management section for admin and executive users
+  const showManagementSection = userRole === 'admin' || userRole === 'executive';
 
   return (
     <>
@@ -132,47 +156,49 @@ export default function Sidebar() {
           </ul>
         </div>
 
-        {/* Management Navigation Section */}
-        <div>
-          {isExpanded && (
-            <h3 className="text-[#7f849c] text-xs font-semibold uppercase mb-2 transition-opacity duration-300">
-              MANAGEMENT
-            </h3>
-          )}
-          <ul className="space-y-1">
-            {managementNavItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
+        {/* Management Navigation Section - Only for admin and executive */}
+        {showManagementSection && (
+          <div>
+            {isExpanded && (
+              <h3 className="text-[#7f849c] text-xs font-semibold uppercase mb-2 transition-opacity duration-300">
+                MANAGEMENT
+              </h3>
+            )}
+            <ul className="space-y-1">
+              {managementNavItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
 
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setIsMobileOpen(false)}
-                    className={`
-                      flex items-center rounded-lg
-                      text-[0.95rem] font-medium
-                      transition-all duration-200 ease-in-out
-                      ${isExpanded ? 'gap-3 px-4 py-3' : 'justify-center py-3 px-2'}
-                      ${
-                        active
-                          ? 'bg-gradient-to-r from-[rgba(242,92,5,0.15)] to-[rgba(242,92,5,0.05)] text-[#F25C05] border-l-[3px] border-[#F25C05] pl-[calc(1rem-3px)] font-semibold'
-                          : 'text-[#a6adc8] hover:bg-[#313244] hover:text-[#cdd6f4]'
-                      }
-                      ${!isExpanded && active ? 'border-l-[3px] border-[#F25C05]' : ''}
-                    `}
-                    title={!isExpanded ? item.label : undefined}
-                  >
-                    <Icon className={`stroke-2 ${isExpanded ? 'w-5 h-5' : 'w-6 h-6'}`} />
-                    {isExpanded && (
-                      <span className="whitespace-nowrap">{item.label}</span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsMobileOpen(false)}
+                      className={`
+                        flex items-center rounded-lg
+                        text-[0.95rem] font-medium
+                        transition-all duration-200 ease-in-out
+                        ${isExpanded ? 'gap-3 px-4 py-3' : 'justify-center py-3 px-2'}
+                        ${
+                          active
+                            ? 'bg-gradient-to-r from-[rgba(242,92,5,0.15)] to-[rgba(242,92,5,0.05)] text-[#F25C05] border-l-[3px] border-[#F25C05] pl-[calc(1rem-3px)] font-semibold'
+                            : 'text-[#a6adc8] hover:bg-[#313244] hover:text-[#cdd6f4]'
+                        }
+                        ${!isExpanded && active ? 'border-l-[3px] border-[#F25C05]' : ''}
+                      `}
+                      title={!isExpanded ? item.label : undefined}
+                    >
+                      <Icon className={`stroke-2 ${isExpanded ? 'w-5 h-5' : 'w-6 h-6'}`} />
+                      {isExpanded && (
+                        <span className="whitespace-nowrap">{item.label}</span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
       </nav>
 
       {/* Logout Button - Pushed to Bottom */}
