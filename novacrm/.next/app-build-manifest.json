@@ -1,3 +1,19 @@
 {
-  "pages": {}
+  "pages": {
+    "/auth/callback/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/auth/callback/route.js"
+    ],
+    "/api/deals/[id]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/deals/[id]/route.js"
+    ],
+    "/api/deals/metrics/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/deals/metrics/route.js"
+    ]
+  }
 }

@@ -245,6 +245,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../app/api/dashboard/deals-at-risk/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/dashboard/deals-at-risk">> = Specific
+  const handler = {} as typeof import("../../app/api/dashboard/deals-at-risk/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/dashboard/pipeline-funnel/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/dashboard/pipeline-funnel">> = Specific
+  const handler = {} as typeof import("../../app/api/dashboard/pipeline-funnel/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../app/api/dashboard/stats/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/dashboard/stats">> = Specific

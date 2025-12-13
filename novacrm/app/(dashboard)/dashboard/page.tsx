@@ -1,10 +1,12 @@
 /**
  * Dashboard Page
  * Story 6.1: Dashboard Page with Four Key Stat Cards
+ * Story 6.2: Pipeline Funnel Visualization by Stage
+ * Story 6.3: Deals at Risk Identification & List
  * AC1, AC2: Dashboard route, page header structure
  *
  * Protected route - requires authentication.
- * Displays four key pipeline metrics at a glance.
+ * Displays four key pipeline metrics, funnel visualization, and at-risk deals.
  *
  * Features Catppuccin Mocha dark theme with NovaCRM branding.
  * Protection: Middleware redirects unauthenticated users to /login
@@ -13,6 +15,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardStats from '@/app/components/dashboard/DashboardStats'
+import PipelineFunnel from '@/app/components/dashboard/PipelineFunnel'
+import DealsAtRisk from '@/app/components/dashboard/DealsAtRisk'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -130,6 +134,16 @@ export default async function DashboardPage() {
 
       {/* AC3: Four Stat Cards Grid */}
       <DashboardStats data={statsData || undefined} error={error || undefined} />
+
+      {/* Story 6.2: Pipeline Funnel Visualization */}
+      <div className="mt-8">
+        <PipelineFunnel />
+      </div>
+
+      {/* Story 6.3: Deals at Risk */}
+      <div className="mt-8">
+        <DealsAtRisk />
+      </div>
     </div>
   )
 }
