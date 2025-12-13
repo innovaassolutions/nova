@@ -93,12 +93,13 @@ export async function parseLinkedInCSV(file: File): Promise<CSVParseResult> {
             return;
           }
 
-          // Validate LinkedIn URL format (Architecture §3.4.1)
-          const linkedinUrlPattern = /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/;
+          // Validate LinkedIn URL format (flexible validation for any LinkedIn URL)
+          // Supports: http/https, with/without www, personal/company pages, query parameters
+          const linkedinUrlPattern = /^https?:\/\/(www\.)?linkedin\.com\//;
           if (!linkedinUrlPattern.test(row['URL'])) {
             errors.push({
               row: rowNum,
-              message: 'Invalid LinkedIn URL format',
+              message: 'Invalid LinkedIn URL format - must be a valid LinkedIn URL',
             });
             return;
           }
@@ -151,11 +152,14 @@ export async function parseLinkedInCSV(file: File): Promise<CSVParseResult> {
 /**
  * Validate LinkedIn URL format
  *
+ * Simple, flexible validation that accepts any valid LinkedIn URL.
+ * Supports: http/https, with/without www, personal/company pages, query parameters
+ *
  * @param url - URL string to validate
- * @returns true if valid LinkedIn profile URL, false otherwise
+ * @returns true if valid LinkedIn URL, false otherwise
  */
 export function validateLinkedInUrl(url: string): boolean {
-  const pattern = /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/;
+  const pattern = /^https?:\/\/(www\.)?linkedin\.com\//;
   return pattern.test(url);
 }
 

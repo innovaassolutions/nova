@@ -122,7 +122,9 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
   };
 
   const validateLinkedInUrl = (url: string): boolean => {
-    const pattern = /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/;
+    // Simple, flexible LinkedIn URL validation - accepts any valid LinkedIn URL
+    // Supports: http/https, with/without www, personal/company pages, query parameters
+    const pattern = /^https?:\/\/(www\.)?linkedin\.com\//;
     return pattern.test(url);
   };
 
@@ -180,7 +182,9 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
           return newErrors;
         });
         // Check for duplicates after validating URL
-        await checkForDuplicates();
+        if (formData.linkedin_url) {
+          await checkForDuplicates();
+        }
       }
     }
   };
@@ -252,10 +256,9 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
       newErrors.last_name = 'Last name is required';
     }
 
-    if (!formData.linkedin_url.trim()) {
-      newErrors.linkedin_url = 'LinkedIn URL is required';
-    } else if (!validateLinkedInUrl(formData.linkedin_url)) {
-      newErrors.linkedin_url = 'Must be a valid LinkedIn profile URL';
+    // LinkedIn URL is optional, but if provided, must be valid
+    if (formData.linkedin_url.trim() && !validateLinkedInUrl(formData.linkedin_url)) {
+      newErrors.linkedin_url = 'Must be a valid LinkedIn URL (e.g., https://linkedin.com/in/username)';
     }
 
     if (formData.email && !validateEmail(formData.email)) {
@@ -406,7 +409,7 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
             {/* LinkedIn URL - Required with Validation */}
             <div>
               <label htmlFor="linkedin_url" className="mb-1 block text-sm font-medium text-[#cdd6f4]">
-                LinkedIn URL <span className="text-red-400">*</span>
+                LinkedIn URL
               </label>
               <div className="relative">
                 <input
@@ -425,9 +428,9 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
               {errors.linkedin_url && (
                 <p className="mt-1 text-sm text-red-400">{errors.linkedin_url}</p>
               )}
-              {!errors.linkedin_url && !isLinkedInValid && !isDuplicate && (
+              {!errors.linkedin_url && !isLinkedInValid && !isDuplicate && formData.linkedin_url && (
                 <p className="mt-1 text-xs text-[#6c7086]">
-                  Format: https://www.linkedin.com/in/username
+                  Optional - Accepts any valid LinkedIn URL (personal or company profiles)
                 </p>
               )}
               {checkingDuplicate && (

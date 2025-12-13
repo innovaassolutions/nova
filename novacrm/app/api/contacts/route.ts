@@ -13,7 +13,7 @@ import { createClient } from '@/app/lib/supabase/server';
 interface ContactRequest {
   first_name: string;
   last_name: string;
-  linkedin_url: string;
+  linkedin_url?: string;
   email?: string;
   company?: string;
   position?: string;
@@ -150,20 +150,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!body.linkedin_url || !body.linkedin_url.trim()) {
-      return NextResponse.json(
-        { error: 'LinkedIn URL is required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate LinkedIn URL format
-    const linkedInPattern = /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/;
-    if (!linkedInPattern.test(body.linkedin_url)) {
-      return NextResponse.json(
-        { error: 'Invalid LinkedIn URL format' },
-        { status: 400 }
-      );
+    // Validate LinkedIn URL format if provided (optional field)
+    if (body.linkedin_url && body.linkedin_url.trim()) {
+      // Simple, flexible LinkedIn URL validation - accepts any valid LinkedIn URL
+      // Supports: http/https, with/without www, personal/company pages, query parameters
+      const linkedInPattern = /^https?:\/\/(www\.)?linkedin\.com\//;
+      if (!linkedInPattern.test(body.linkedin_url)) {
+        return NextResponse.json(
+          { error: 'Invalid LinkedIn URL format. Must be a valid LinkedIn URL.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate email format if provided
@@ -191,7 +188,7 @@ export async function POST(request: NextRequest) {
       .insert({
         first_name: body.first_name.trim(),
         last_name: body.last_name.trim(),
-        linkedin_url: body.linkedin_url.trim(),
+        linkedin_url: body.linkedin_url ? body.linkedin_url.trim() : null,
         email: body.email?.trim() || null,
         company: body.company?.trim() || null,
         position: body.position?.trim() || null,
