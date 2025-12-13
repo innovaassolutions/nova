@@ -57,6 +57,13 @@ export default function SettingsPage() {
     checkUserRole()
   }, [])
 
+  // Redirect to campaigns page when campaigns tab is active
+  useEffect(() => {
+    if (activeTab === 'campaigns') {
+      router.push('/settings/campaigns')
+    }
+  }, [activeTab, router])
+
   const visibleTabs = tabs.filter(tab => {
     if (tab.adminOnly && userRole !== 'admin') {
       return false
@@ -115,7 +122,7 @@ export default function SettingsPage() {
         {activeTab === 'users' && <UserManagementTab />}
         {activeTab === 'campaigns' && (
           <div className="text-mocha-subtext0">
-            Campaign management coming soon (Story 3.5)
+            Redirecting to Campaign Management...
           </div>
         )}
         {activeTab === 'pipeline-stages' && (
