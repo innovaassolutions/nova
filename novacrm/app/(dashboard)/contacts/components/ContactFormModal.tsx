@@ -27,7 +27,6 @@ interface FormData {
   last_name: string;
   linkedin_url: string;
   email: string;
-  company: string;
   position: string;
   connected_on: string;
   source: string;
@@ -47,7 +46,6 @@ interface DuplicateContact {
   first_name: string;
   last_name: string;
   linkedin_url: string;
-  company: string | null;
   position: string | null;
   email: string | null;
 }
@@ -71,7 +69,6 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
     last_name: '',
     linkedin_url: '',
     email: '',
-    company: '',
     position: '',
     connected_on: today,
     source: 'LinkedIn',
@@ -300,7 +297,6 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
           last_name: '',
           linkedin_url: '',
           email: '',
-          company: '',
           position: '',
           connected_on: today,
           source: 'LinkedIn',
@@ -447,7 +443,6 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
                       {duplicateMatches.map((match) => (
                         <div key={match.id} className="mt-1 text-sm text-[#cdd6f4]">
                           <span className="font-semibold">{match.first_name} {match.last_name}</span>
-                          {match.company && <span> at {match.company}</span>}
                           {' • '}
                           <button
                             type="button"
@@ -481,21 +476,6 @@ export default function ContactFormModal({ isOpen, onClose, onSuccess }: Contact
               {errors.email && (
                 <p className="mt-1 text-sm text-red-400">{errors.email}</p>
               )}
-            </div>
-
-            {/* Company - Optional */}
-            <div>
-              <label htmlFor="company" className="mb-1 block text-sm font-medium text-[#cdd6f4]">
-                Company
-              </label>
-              <input
-                type="text"
-                id="company"
-                value={formData.company}
-                onChange={(e) => handleInputChange('company', e.target.value)}
-                className="w-full rounded-lg border border-[#313244] bg-[#1e1e2e] px-3 py-2 text-[#cdd6f4] placeholder-[#6c7086] focus:border-[#F25C05] focus:outline-none focus:ring-1 focus:ring-[#F25C05]"
-                placeholder="Acme Corp"
-              />
             </div>
 
             {/* Position - Optional */}
