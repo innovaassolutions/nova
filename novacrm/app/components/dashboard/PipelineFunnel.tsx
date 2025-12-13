@@ -4,8 +4,8 @@
  * PipelineFunnel Component
  * Story 6.2: Pipeline Funnel Visualization by Stage
  *
- * Visual funnel showing deal count and value at each pipeline stage
- * with conversion rates and interactive navigation to filtered deals
+ * Stacked horizontal bar chart showing deal distribution across pipeline stages
+ * with interactive segments and detailed breakdown
  */
 
 import { useEffect, useState } from 'react'
@@ -35,12 +35,24 @@ interface PipelineFunnelProps {
   }
 }
 
+// Catppuccin Mocha color palette for stages
+const STAGE_COLORS = [
+  '#f38ba8', // Red/Pink
+  '#fab387', // Peach
+  '#f9e2af', // Yellow
+  '#a6e3a1', // Green
+  '#89dceb', // Sky
+  '#89b4fa', // Blue
+  '#cba6f7', // Mauve
+  '#f5c2e7', // Pink
+]
+
 export default function PipelineFunnel({ filters }: PipelineFunnelProps) {
   const router = useRouter()
   const [data, setData] = useState<PipelineFunnelData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'funnel' | 'list'>('funnel')
+  const [hoveredStage, setHoveredStage] = useState<string | null>(null)
 
   useEffect(() => {
     fetchFunnelData()
@@ -86,13 +98,6 @@ export default function PipelineFunnel({ filters }: PipelineFunnelProps) {
     return `$${value}`
   }
 
-  const getConversionColor = (rate: number | null) => {
-    if (rate === null) return ''
-    if (rate >= 50) return 'text-green-400'
-    if (rate >= 30) return 'text-yellow-400'
-    return 'text-red-400'
-  }
-
   const handleStageClick = (stageId: string) => {
     router.push(`/deals?stage_id=${stageId}`)
   }
@@ -115,144 +120,129 @@ export default function PipelineFunnel({ filters }: PipelineFunnelProps) {
     )
   }
 
-  // Calculate max value for bar width scaling
-  const maxValue = Math.max(...data.funnel_data.map((stage) => stage.total_value), 1)
+  // Calculate percentages for each stage
+  const stagesWithPercentages = data.funnel_data.map((stage, index) => {
+    const percentage = data.total_pipeline_value > 0
+      ? (stage.total_value / data.total_pipeline_value) * 100
+      : 0
+
+    return {
+      ...stage,
+      percentage,
+      color: STAGE_COLORS[index % STAGE_COLORS.length],
+    }
+  })
 
   return (
     <div className="rounded-xl border border-[#313244] bg-[#181825] p-4 md:p-6">
       {/* Section Header */}
-      <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-[#cdd6f4]">Pipeline by Stage</h2>
-          <p className="text-sm text-[#a6adc8]">Deal count and value per stage</p>
-        </div>
-
-        {/* View Toggle */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => setViewMode('funnel')}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-              viewMode === 'funnel'
-                ? 'bg-[#F25C05] text-white'
-                : 'bg-[#313244] text-[#a6adc8] hover:bg-[#45475a]'
-            }`}
-          >
-            Funnel View
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-              viewMode === 'list'
-                ? 'bg-[#F25C05] text-white'
-                : 'bg-[#313244] text-[#a6adc8] hover:bg-[#45475a]'
-            }`}
-          >
-            List View
-          </button>
-        </div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-[#cdd6f4]">Pipeline by Stage</h2>
+        <p className="text-sm text-[#a6adc8]">
+          {data.total_deals} {data.total_deals === 1 ? 'deal' : 'deals'} • {formatCurrency(data.total_pipeline_value)} total value
+        </p>
       </div>
 
-      {/* Funnel View */}
-      {viewMode === 'funnel' && (
-        <div className="space-y-3">
-          {data.funnel_data.map((stage, index) => {
-            const widthPercent = maxValue > 0 ? (stage.total_value / maxValue) * 100 : 0
-            const indentPx = index * 20 // Funnel narrowing effect
-            const pipelinePercent = data.total_pipeline_value > 0
-              ? Math.round((stage.total_value / data.total_pipeline_value) * 100)
-              : 0
+      {/* Empty State */}
+      {data.total_deals === 0 ? (
+        <div className="py-12 text-center">
+          <p className="text-lg text-[#6c7086]">No deals in pipeline</p>
+          <p className="mt-2 text-sm text-[#a6adc8]">Deals will appear here once created</p>
+        </div>
+      ) : (
+        <>
+          {/* Stacked Bar Chart */}
+          <div className="mb-6">
+            <div className="flex h-16 w-full overflow-hidden rounded-lg border border-[#45475a]">
+              {stagesWithPercentages.map((stage) => {
+                if (stage.percentage === 0) return null
 
-            return (
-              <div key={stage.stage_id}>
-                {/* Stage Bar */}
-                <div
-                  className="group relative cursor-pointer transition-all hover:scale-[1.02]"
-                  style={{ paddingLeft: `${indentPx}px` }}
-                  onClick={() => handleStageClick(stage.stage_id)}
-                  title={`${stage.deal_count} deals • ${formatCurrency(stage.total_value)} total • ${pipelinePercent}% of pipeline`}
-                >
+                return (
                   <div
-                    className="relative h-12 rounded-lg border border-[#45475a] bg-gradient-to-r from-[#F25C05] to-[#ff6b1a] shadow-md transition-all group-hover:shadow-lg"
-                    style={{ width: `${Math.max(widthPercent, 10)}%` }}
+                    key={stage.stage_id}
+                    className="relative cursor-pointer transition-all duration-200 hover:brightness-110"
+                    style={{
+                      width: `${stage.percentage}%`,
+                      backgroundColor: stage.color,
+                    }}
+                    onClick={() => handleStageClick(stage.stage_id)}
+                    onMouseEnter={() => setHoveredStage(stage.stage_id)}
+                    onMouseLeave={() => setHoveredStage(null)}
+                    title={`${stage.stage_name}: ${stage.deal_count} deals, ${formatCurrency(stage.total_value)}`}
                   >
-                    {/* Stage Content */}
-                    <div className="flex h-full items-center justify-between px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-white">
-                          {stage.stage_name}
+                    {/* Show stage name only if segment is wide enough */}
+                    {stage.percentage > 10 && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
+                        <span className="text-xs font-bold text-[#1e1e2e] md:text-sm">
+                          {stage.deal_count}
                         </span>
-                        <span className="text-sm text-white/80">
-                          ({stage.deal_count} {stage.deal_count === 1 ? 'deal' : 'deals'})
-                        </span>
+                        {stage.percentage > 15 && (
+                          <span className="hidden text-[10px] font-medium text-[#1e1e2e] md:block">
+                            {formatCurrency(stage.total_value)}
+                          </span>
+                        )}
                       </div>
-                      <span className="font-bold text-white">
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Stage Legend */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {stagesWithPercentages.map((stage) => {
+              const isHovered = hoveredStage === stage.stage_id
+
+              return (
+                <div
+                  key={stage.stage_id}
+                  className={`cursor-pointer rounded-lg border p-3 transition-all ${
+                    isHovered
+                      ? 'border-[#F25C05] bg-[#F25C05]/10'
+                      : 'border-[#313244] bg-[#1e1e2e] hover:border-[#45475a]'
+                  }`}
+                  onClick={() => handleStageClick(stage.stage_id)}
+                  onMouseEnter={() => setHoveredStage(stage.stage_id)}
+                  onMouseLeave={() => setHoveredStage(null)}
+                >
+                  {/* Color Indicator */}
+                  <div className="mb-2 flex items-center gap-2">
+                    <div
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: stage.color }}
+                    />
+                    <span className="text-sm font-semibold text-[#cdd6f4]">
+                      {stage.stage_name}
+                    </span>
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-[#a6adc8]">Deals</span>
+                      <span className="text-sm font-bold text-[#cdd6f4]">
+                        {stage.deal_count}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-[#a6adc8]">Value</span>
+                      <span className="text-sm font-bold text-[#cdd6f4]">
                         {formatCurrency(stage.total_value)}
                       </span>
                     </div>
-
-                    {/* Empty State Overlay */}
-                    {stage.deal_count === 0 && (
-                      <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#45475a]">
-                        <span className="text-sm text-[#6c7086]">0 deals</span>
-                      </div>
-                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-[#a6adc8]">% of Total</span>
+                      <span className="text-sm font-bold text-[#F25C05]">
+                        {Math.round(stage.percentage)}%
+                      </span>
+                    </div>
                   </div>
                 </div>
-
-                {/* Conversion Rate */}
-                {stage.conversion_rate !== null && (
-                  <div className="mt-1 text-center text-sm" style={{ paddingLeft: `${indentPx}px` }}>
-                    <span className={getConversionColor(stage.conversion_rate)}>
-                      {stage.conversion_rate}% →
-                    </span>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* List View */}
-      {viewMode === 'list' && (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#313244]">
-                <th className="pb-3 text-left text-sm font-semibold text-[#a6adc8]">Stage</th>
-                <th className="pb-3 text-right text-sm font-semibold text-[#a6adc8]">Deals</th>
-                <th className="pb-3 text-right text-sm font-semibold text-[#a6adc8]">Value</th>
-                <th className="pb-3 text-right text-sm font-semibold text-[#a6adc8]">Conversion</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.funnel_data.map((stage) => (
-                <tr
-                  key={stage.stage_id}
-                  className="cursor-pointer border-b border-[#313244] transition-colors hover:bg-[#313244]"
-                  onClick={() => handleStageClick(stage.stage_id)}
-                >
-                  <td className="py-3 text-left font-medium text-[#cdd6f4]">
-                    {stage.stage_name}
-                  </td>
-                  <td className="py-3 text-right text-[#cdd6f4]">{stage.deal_count}</td>
-                  <td className="py-3 text-right text-[#cdd6f4]">
-                    {formatCurrency(stage.total_value)}
-                  </td>
-                  <td className="py-3 text-right">
-                    {stage.conversion_rate !== null ? (
-                      <span className={getConversionColor(stage.conversion_rate)}>
-                        {stage.conversion_rate}% →
-                      </span>
-                    ) : (
-                      <span className="text-[#6c7086]">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              )
+            })}
+          </div>
+        </>
       )}
     </div>
   )
